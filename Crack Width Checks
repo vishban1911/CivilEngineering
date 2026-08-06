@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tool — Crack Width Check (IS 456:2000, Annex F)</title>
+<style>
+:root{
+  --bg:#F7F9FB;
+  --grid:#E3E9EF;
+  --blue:#1B4F72;
+  --blue-light:#EAF1F6;
+  --amber:#D68910;
+  --amber-light:#FCF3E3;
+  --green:#1E7A46;
+  --green-light:#E7F5EC;
+  --ink:#1C2B36;
+  --sub:#5B6B76;
+  --border:#C6D3DB;
+  --mono: "Roboto Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --sans: "Inter","Segoe UI",Roboto,-apple-system,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  color:var(--ink);
+  background-color:var(--bg);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size:24px 24px;
+}
+.sheet{max-width:1180px;margin:0 auto;padding:24px 20px 60px;}
+header.titleblock{
+  border:2px solid var(--blue);
+  background:#fff;
+  padding:16px 20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-bottom:18px;
+}
+header.titleblock h1{margin:0;font-size:20px;color:var(--blue);letter-spacing:.2px;}
+header.titleblock .code-tag{
+  font-family:var(--mono);
+  font-size:12.5px;
+  color:#fff;
+  background:var(--blue);
+  padding:5px 10px;
+  border-radius:2px;
+  white-space:nowrap;
+}
+header.titleblock .subtitle{font-size:12.5px;color:var(--sub);margin-top:4px;}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+@media(max-width:880px){.grid2{grid-template-columns:1fr;}}
+
+.panel{
+  background:#fff;
+  border:1px solid var(--border);
+  border-top:3px solid var(--blue);
+  margin-bottom:18px;
+}
+.panel h2{
+  margin:0;
+  font-size:13px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  color:var(--blue);
+  background:var(--blue-light);
+  padding:9px 14px;
+  border-bottom:1px solid var(--border);
+}
+.panel h3.sub{
+  margin:14px 0 8px;
+  font-size:11.5px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  color:var(--sub);
+  border-bottom:1px dashed var(--border);
+  padding-bottom:4px;
+}
+.panel .body{padding:14px 16px;}
+
+.field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;}
+.field label{font-size:13px;color:var(--ink);}
+.field .hint{display:block;font-size:11px;color:var(--sub);font-weight:400;}
+.field input[type=number], .field select{
+  font-family:var(--mono);
+  font-size:13px;
+  width:120px;
+  padding:5px 7px;
+  border:1px solid var(--border);
+  border-radius:2px;
+  background:#FCFDFE;
+  text-align:right;
+}
+.field select{width:190px;text-align:left;}
+.field.checkboxrow{justify-content:flex-start;gap:8px;}
+.field.checkboxrow input{width:auto;}
+
+.divider{border:none;border-top:1px dashed var(--border);margin:10px 0;}
+
+.layerRow{
+  display:grid;
+  grid-template-columns:22px 60px 1fr 1fr 1fr;
+  gap:6px;
+  align-items:center;
+  margin-bottom:6px;
+  font-size:12px;
+}
+.layerRow.hasRole{grid-template-columns:22px 60px 1fr 1fr 1fr 1fr;}
+.layerRow .lbl{color:var(--sub);font-size:11px;}
+.layerRow input[type=checkbox]{width:auto;}
+.layerRow input[type=number]{
+  font-family:var(--mono);font-size:12px;width:100%;padding:4px 5px;
+  border:1px solid var(--border);border-radius:2px;background:#FCFDFE;text-align:right;
+}
+.layerRow select{font-size:11.5px;width:100%;padding:3px 4px;border:1px solid var(--border);border-radius:2px;}
+.layerHead{
+  display:grid;grid-template-columns:22px 60px 1fr 1fr 1fr;gap:6px;
+  font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);margin-bottom:4px;
+}
+.layerHead.hasRole{grid-template-columns:22px 60px 1fr 1fr 1fr 1fr;}
+
+button#runBtn{
+  width:100%;
+  padding:12px;
+  background:var(--blue);
+  color:#fff;
+  border:none;
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.3px;
+  cursor:pointer;
+  margin-bottom:18px;
+}
+button#runBtn:hover{background:#163f5c;}
+
+.results{display:none;}
+.verdict{
+  padding:16px 18px;
+  margin-bottom:14px;
+  border:1px solid var(--border);
+  font-size:15px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.verdict.pass{background:var(--green-light);border-color:var(--green);color:var(--green);}
+.verdict.fail{background:var(--amber-light);border-color:var(--amber);color:var(--amber);}
+.verdict .badge{
+  font-family:var(--mono);
+  font-size:13px;
+  padding:3px 10px;
+  border-radius:2px;
+  color:#fff;
+}
+.verdict.pass .badge{background:var(--green);}
+.verdict.fail .badge{background:var(--amber);}
+
+table.calc{width:100%;border-collapse:collapse;font-size:13px;}
+table.calc caption{text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--blue);margin-bottom:6px;font-weight:600;}
+table.calc td, table.calc th{padding:5px 8px;border-bottom:1px solid var(--grid);}
+table.calc th{text-align:left;color:var(--sub);font-weight:500;width:55%;}
+table.calc td.val{font-family:var(--mono);text-align:right;white-space:nowrap;}
+table.calc tr.governing td{font-weight:700;color:var(--blue);}
+
+.note{
+  font-size:12px;
+  color:var(--sub);
+  background:var(--blue-light);
+  border-left:3px solid var(--blue);
+  padding:8px 12px;
+  margin-top:10px;
+}
+.warn-note{
+  font-size:12px;
+  color:#8a5a00;
+  background:var(--amber-light);
+  border-left:3px solid var(--amber);
+  padding:8px 12px;
+  margin-top:10px;
+}
+
+details.method{
+  background:#fff;border:1px solid var(--border);border-top:3px solid var(--blue);
+  margin-bottom:18px;
+}
+details.method summary{
+  cursor:pointer;font-size:13px;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--blue);background:var(--blue-light);padding:9px 14px;
+  border-bottom:1px solid var(--border);
+}
+details.method[open] summary{border-bottom:1px solid var(--border);}
+details.method .body{padding:14px 16px;font-size:13px;line-height:1.55;}
+details.method ul{margin:6px 0;padding-left:20px;}
+
+footer.disclaimer{
+  border:1px solid var(--border);
+  border-left:4px solid var(--amber);
+  background:#fff;
+  padding:12px 16px;
+  font-size:11.5px;
+  color:var(--sub);
+  margin-top:24px;
+  line-height:1.5;
+}
+footer.disclaimer strong{color:var(--ink);}
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="titleblock">
+    <div>
+      <h1>Crack Width Check — Flexure with Axial Force</h1>
+      <div class="subtitle">Rectangular RC section · multi-layer reinforcement · service (working) loads</div>
+    </div>
+    <span class="code-tag">IS 456:2000 — Annex F</span>
+  </header>
+
+  <details class="method">
+    <summary>Method &amp; assumptions (read before use)</summary>
+    <div class="body">
+      This tool checks surface crack width for a <strong>rectangular section under combined axial force (P) and
+      bending moment (M) at service (unfactored) loads</strong>, then applies IS 456:2000 Annex F.
+      <ul>
+        <li><strong>Section response:</strong> a cracked, linear-elastic strain field is solved by iterative force/moment
+        equilibrium (concrete carries no tension; steel and concrete are linear-elastic). This automatically captures the
+        benefit of axial compression — larger P shifts the neutral axis and reduces (or removes) the tensile strain.</li>
+        <li><strong>Uncracked case:</strong> if equilibrium shows the whole section in net compression, no flexural crack
+        forms and the check reports a governing crack width of 0.</li>
+        <li><strong>Multiple layers:</strong> up to 3 layers on the tension side and 3 on the compression side, each at
+        its own depth, all participate in the equilibrium solve (except any layer marked "distribution"). The
+        effective depth d used in Annex F is the area-weighted centroid of the tension-side layers. Layer 1 (tension
+        side) — the layer nearest the tension face — governs the a<sub>cr</sub> / crack-width geometry, since that is
+        the bar controlling the surface crack.</li>
+        <li><strong>Distribution/secondary steel</strong> (perpendicular to the main bars, for shrinkage &amp;
+        temperature control) is excluded from the M–N equilibrium solve and from the a<sub>cr</sub> calculation — it
+        doesn't resist bending in the direction checked, and doesn't control the flexural crack being checked.</li>
+        <li><strong>Effective depth</strong> is never entered directly — each layer's depth is derived from its own
+        clear cover and bar diameter.</li>
+        <li><strong>Tension stiffening:</strong> the strain at the tension-steel centroid is reduced to ε<sub>m</sub>
+        per Annex F eq. F-2 before use in the crack-width formula.</li>
+        <li><strong>Long-term modulus:</strong> if sustained loading applies, E<sub>c,eff</sub> = E<sub>c</sub> /
+        (1 + θ), θ = creep coefficient (IS 456 Cl 6.2.5.1 gives typical θ = 2.2 / 1.6 / 1.1 for loading ages of 7
+        days / 28 days / 1 year — but θ is project- and age-dependent, so it's entered directly here.)</li>
+        <li><strong>Steel grade (fy)</strong> does not enter the Annex F crack-width formula at all — Annex F works
+        directly with the elastic strain field, not with yield strength. Steel grade is used only for the separate
+        SLS permissible-stress check below.</li>
+        <li><strong>SLS stress checks</strong> report the elastic stress in the concrete extreme fibre and in the
+        tension steel against IS 456 Annex B permissible working stresses (Table 21 / Table 22).</li>
+        <li><strong>Scope:</strong> single rectangular section, uniform cover per layer. Not valid for flanged,
+        circular, or non-prismatic sections. Loads must be service (working) loads, not factored ultimate loads.</li>
+      </ul>
+    </div>
+  </details>
+
+  <div class="grid2">
+    <div>
+      <div class="panel">
+        <h2>Section Geometry</h2>
+        <div class="body">
+          <div class="field"><label>Width, b<span class="hint">mm (use 1000 for slabs/walls per metre)</span></label><input id="b" type="number" value="1000"></div>
+          <div class="field"><label>Overall depth, h<span class="hint">mm</span></label><input id="h" type="number" value="400"></div>
+          <div class="note">Effective depth is never entered directly — each reinforcement layer's depth is calculated
+          from its own clear cover + bar radius below.</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Reinforcement</h2>
+        <div class="body">
+          <h3 class="sub">Tension side (face being checked for cracking) — up to 3 layers</h3>
+          <div class="layerHead"><span></span><span class="lbl">Layer</span><span class="lbl">φ (mm)</span><span class="lbl">Spacing c/c (mm)</span><span class="lbl">Clear cover (mm)</span></div>
+          <div class="layerRow"><span class="lbl">1</span><span class="lbl">Layer 1*</span>
+            <input id="t1_phi" type="number" value="16"><input id="t1_s" type="number" value="150"><input id="t1_c" type="number" value="40"></div>
+          <div class="layerRow"><input type="checkbox" id="t2_en"><span class="lbl">Layer 2</span>
+            <input id="t2_phi" type="number" value="16"><input id="t2_s" type="number" value="150"><input id="t2_c" type="number" value="80"></div>
+          <div class="layerRow"><input type="checkbox" id="t3_en"><span class="lbl">Layer 3</span>
+            <input id="t3_phi" type="number" value="16"><input id="t3_s" type="number" value="150"><input id="t3_c" type="number" value="120"></div>
+          <div class="note">*Layer 1 is always active and is taken as the layer nearest the tension face — it governs
+          a<sub>cr</sub> (crack geometry). Clear cover is measured from the tension face to each layer's bar surface.</div>
+
+          <div class="field"><label>Side cover (for corner a<sub>cr</sub> check), c<sub>side</sub></label><input id="covSide" type="number" value="40"></div>
+
+          <hr class="divider">
+          <h3 class="sub">Compression side — up to 3 layers (optional)</h3>
+          <div class="layerHead hasRole"><span></span><span class="lbl">Layer</span><span class="lbl">φ (mm)</span><span class="lbl">Spacing (mm)</span><span class="lbl">Cover (mm)</span><span class="lbl">Role</span></div>
+          <div class="layerRow hasRole"><input type="checkbox" id="c1_en"><span class="lbl">Layer 1</span>
+            <input id="c1_phi" type="number" value="12"><input id="c1_s" type="number" value="200"><input id="c1_c" type="number" value="40">
+            <select id="c1_role"><option value="structural">Structural</option><option value="distribution">Distribution</option></select></div>
+          <div class="layerRow hasRole"><input type="checkbox" id="c2_en"><span class="lbl">Layer 2</span>
+            <input id="c2_phi" type="number" value="12"><input id="c2_s" type="number" value="200"><input id="c2_c" type="number" value="70">
+            <select id="c2_role"><option value="structural">Structural</option><option value="distribution">Distribution</option></select></div>
+          <div class="layerRow hasRole"><input type="checkbox" id="c3_en"><span class="lbl">Layer 3</span>
+            <input id="c3_phi" type="number" value="12"><input id="c3_s" type="number" value="200"><input id="c3_c" type="number" value="100">
+            <select id="c3_role"><option value="structural">Structural</option><option value="distribution">Distribution</option></select></div>
+          <div class="note">"Structural" = same direction as tension steel, resists M &amp; N (included in the
+          equilibrium solve). "Distribution" = perpendicular shrinkage/temperature steel — excluded from the M–N
+          solve and from the crack check; only compared against the IS 456 Cl 26.5.2.1 minimum (0.12%/0.15% of
+          gross area).</div>
+          <div class="note" id="astNote">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel">
+        <h2>Materials</h2>
+        <div class="body">
+          <div class="field"><label>Concrete grade, f<sub>ck</sub></label><input id="fck" type="number" value="30"></div>
+          <div class="field"><label>Steel modulus, E<sub>s</sub></label><input id="Es" type="number" value="200000"></div>
+          <div class="field checkboxrow"><input type="checkbox" id="longTerm"><label for="longTerm">Use long-term (creep-reduced) modulus for sustained loads</label></div>
+          <div class="field"><label>Creep coefficient, θ<span class="hint">IS 456 Cl 6.2.5.1 — depends on age at loading &amp; project conditions</span></label><input id="theta" type="number" value="1.6" step="0.1"></div>
+          <div class="note" id="ecNote">Ec = —</div>
+          <hr class="divider">
+          <div class="field">
+            <label>Steel grade<span class="hint">for SLS stress check only — has NO effect on the Annex F crack-width result</span></label>
+            <select id="steelGrade">
+              <option value="140">Fe 250 (mild steel) — σst = 140 N/mm²</option>
+              <option value="230" selected>Fe 415 (HYSD) — σst = 230 N/mm²</option>
+              <option value="275">Fe 500 (HYSD) — σst = 275 N/mm²</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div class="field" id="customSstWrap" style="display:none;"><label>Custom σst</label><input id="customSst" type="number" value="230"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Service Loads (unfactored)</h2>
+        <div class="body">
+          <div class="field"><label>Axial force, P<span class="hint">kN, +ve = compression</span></label><input id="P" type="number" value="200"></div>
+          <div class="field"><label>Bending moment, M<span class="hint">kNm, +ve = tension on tension side</span></label><input id="M" type="number" value="60"></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Exposure / Permissible Width</h2>
+        <div class="body">
+          <div class="field">
+            <label>Exposure condition</label>
+            <select id="exposure">
+              <option value="0.3">Mild / Moderate — 0.3 mm</option>
+              <option value="0.2">Severe / Very Severe — 0.2 mm</option>
+              <option value="0.1">Extreme (e.g. liquid-retaining) — 0.1 mm</option>
+              <option value="custom">Custom…</option>
+            </select>
+          </div>
+          <div class="field" id="customWrap" style="display:none;"><label>Custom limit</label><input id="customLimit" type="number" value="0.3"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button id="runBtn" onclick="runCheck()">Run Crack Width Check</button>
+
+  <div class="results" id="results">
+    <div class="verdict" id="verdictBox"></div>
+
+    <div class="panel">
+      <h2>Sketch — Section, Loads &amp; Neutral Axis</h2>
+      <div class="body">
+        <div id="sketchWrap" style="text-align:center;"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Calculation</h2>
+      <div class="body">
+        <table class="calc">
+          <caption>Section &amp; material</caption>
+          <tbody id="tblSection"></tbody>
+        </table>
+        <hr class="divider">
+        <table class="calc">
+          <caption>Cracked-section equilibrium (P, M applied)</caption>
+          <tbody id="tblEquilibrium"></tbody>
+        </table>
+        <hr class="divider">
+        <table class="calc">
+          <caption>Annex F — strain &amp; crack width</caption>
+          <tbody id="tblCrack"></tbody>
+        </table>
+        <div id="extraNote"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>SLS Stress Checks (IS 456 Annex B — Working Stress Limits)</h2>
+      <div class="body">
+        <table class="calc">
+          <tbody id="tblStress"></tbody>
+        </table>
+        <div id="stressNote"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="disclaimer">
+    <strong>Disclaimer:</strong> This tool is provided for preliminary and educational use only. Results should be
+    independently verified by a qualified engineer before use in design or construction. This is not a substitute for
+    professional judgment or compliance verification against the applicable project-specific code requirements.
+  </footer>
+</div>
+
+<script>
+const exposureSel = document.getElementById('exposure');
+exposureSel.addEventListener('change', ()=>{
+  document.getElementById('customWrap').style.display = exposureSel.value==='custom' ? 'flex' : 'none';
+});
+const steelGradeSel = document.getElementById('steelGrade');
+steelGradeSel.addEventListener('change', ()=>{
+  document.getElementById('customSstWrap').style.display = steelGradeSel.value==='custom' ? 'flex' : 'none';
+});
+
+function num(id){ return parseFloat(document.getElementById(id).value); }
+function chk(id){ return document.getElementById(id).checked; }
+
+// IS 456 Table 21 — permissible concrete compressive stress in bending, σcbc (N/mm²), by fck
+const SIGMA_CBC = [[15,5],[20,7],[25,8.5],[30,10],[35,11.5],[40,13],[45,14.5],[50,16]];
+function sigmaCbc(fck){
+  const t = SIGMA_CBC;
+  if(fck<=t[0][0]) return t[0][1];
+  if(fck>=t[t.length-1][0]) return t[t.length-1][1];
+  for(let i=0;i<t.length-1;i++){
+    if(fck>=t[i][0] && fck<=t[i+1][0]){
+      const f = (fck-t[i][0])/(t[i+1][0]-t[i][0]);
+      return t[i][1] + f*(t[i+1][1]-t[i][1]);
+    }
+  }
+  return t[t.length-1][1];
+}
+
+// ---- read layer inputs into a structured object ----
+function readLayers(h){
+  const tension = [];
+  // Layer 1 always active
+  {
+    const phi=num('t1_phi'), s=num('t1_s'), c=num('t1_c');
+    const A = (Math.PI/4)*phi*phi*(num('b')/s);
+    const yFromTension = c + phi/2;
+    tension.push({label:'T1', phi, s, c, A, y: h - yFromTension});
+  }
+  if(chk('t2_en')){
+    const phi=num('t2_phi'), s=num('t2_s'), c=num('t2_c');
+    const A = (Math.PI/4)*phi*phi*(num('b')/s);
+    tension.push({label:'T2', phi, s, c, A, y: h - (c+phi/2)});
+  }
+  if(chk('t3_en')){
+    const phi=num('t3_phi'), s=num('t3_s'), c=num('t3_c');
+    const A = (Math.PI/4)*phi*phi*(num('b')/s);
+    tension.push({label:'T3', phi, s, c, A, y: h - (c+phi/2)});
+  }
+
+  const compression = [];
+  ['c1','c2','c3'].forEach((pfx,i)=>{
+    if(chk(pfx+'_en')){
+      const phi=num(pfx+'_phi'), s=num(pfx+'_s'), c=num(pfx+'_c');
+      const role=document.getElementById(pfx+'_role').value;
+      const A = (Math.PI/4)*phi*phi*(num('b')/s);
+      compression.push({label:'C'+(i+1), phi, s, c, A, y:(c+phi/2), role});
+    }
+  });
+
+  return {tension, compression};
+}
+
+function updateLiveNotes(){
+  const b=num('b'), h=num('h');
+  const {tension, compression} = readLayers(h);
+  const AstTotal = tension.reduce((s,l)=>s+l.A,0);
+  const dEff = tension.reduce((s,l)=>s+l.A*l.y,0)/AstTotal; // area-weighted centroid, from compression face
+
+  const AscStruct = compression.filter(l=>l.role==='structural').reduce((s,l)=>s+l.A,0);
+  const AscDist = compression.filter(l=>l.role==='distribution').reduce((s,l)=>s+l.A,0);
+
+  let msg = `Ast total (tension) = ${AstTotal.toFixed(0)} mm² across ${tension.length} layer(s), d (centroid) = ${dEff.toFixed(0)} mm from compression face.`;
+  if(compression.length){
+    msg += ` Compression side: ${AscStruct.toFixed(0)} mm² structural, ${AscDist.toFixed(0)} mm² distribution.`;
+    const minDist = 0.0012*b*h;
+    if(AscDist>0){
+      msg += ` Distribution steel vs IS 456 min (0.12% gross, HYSD) = ${minDist.toFixed(0)} mm² → ${AscDist>=minDist?'OK':'BELOW MINIMUM'}.`;
+    }
+  }
+  document.getElementById('astNote').textContent = msg;
+
+  const fck=num('fck'), longTerm=chk('longTerm'), theta=num('theta');
+  let Ec = 5000*Math.sqrt(fck);
+  let EcUsed = Ec;
+  if(longTerm) EcUsed = Ec/(1+theta);
+  document.getElementById('ecNote').textContent =
+    `Ec (short-term) = ${Ec.toFixed(0)} N/mm²${longTerm? `  |  Ec,eff = Ec/(1+θ) = ${Ec.toFixed(0)}/(1+${theta.toFixed(2)}) = ${EcUsed.toFixed(0)} N/mm² (used below)`:'  (used below — enable long-term modulus above to reduce this)'}  |  permissible σcbc ≈ ${sigmaCbc(fck).toFixed(2)} N/mm² (Table 21)`;
+}
+['b','h','t1_phi','t1_s','t1_c','t2_en','t2_phi','t2_s','t2_c','t3_en','t3_phi','t3_s','t3_c',
+ 'c1_en','c1_phi','c1_s','c1_c','c1_role','c2_en','c2_phi','c2_s','c2_c','c2_role','c3_en','c3_phi','c3_s','c3_c','c3_role',
+ 'fck','longTerm','theta'].forEach(id=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input', updateLiveNotes);
+  el.addEventListener('change', updateLiveNotes);
+});
+updateLiveNotes();
+
+// ---- sectional equilibrium solver ----
+// strain(y) = eTop + (eBot-eTop)*y/h ; y measured (mm) from compression face (y=0) to y=h
+// compression-positive strain/stress convention throughout.
+function computeForces(eTop, eBot, p){
+  const {b,h,layers,Es,Ec} = p;
+  const N = 1200;
+  const dy = h/N;
+  let concN=0, concM=0;
+  for(let i=0;i<N;i++){
+    const y = (i+0.5)*dy;
+    const strain = eTop + (eBot-eTop)*(y/h);
+    if(strain>0){
+      const force = Ec*strain*b*dy;
+      concN += force;
+      concM += force*(h/2 - y);
+    }
+  }
+  let steelN=0, steelM=0;
+  for(const L of layers){
+    const strain = eTop + (eBot-eTop)*(L.y/h);
+    const Ecoef = strain>0 ? (Es-Ec) : Es;
+    const force = L.A*Ecoef*strain;
+    steelN += force;
+    steelM += force*(h/2 - L.y);
+  }
+  return {N: concN+steelN, M: concM+steelM};
+}
+
+function solveSection(p, P, M){
+  const {b,h,Ec} = p;
+  const A = b*h, I = b*Math.pow(h,3)/12;
+  let eTop = P/(Ec*A) + M*(h/2)/(Ec*I);
+  let eBot = P/(Ec*A) - M*(h/2)/(Ec*I);
+  const tolN = Math.max(Math.abs(P),1)*1e-6;
+  const tolM = Math.max(Math.abs(M),1)*1e-6;
+  let converged=false;
+  for(let iter=0; iter<80; iter++){
+    const f = computeForces(eTop,eBot,p);
+    const r1=f.N-P, r2=f.M-M;
+    if(Math.abs(r1)<tolN && Math.abs(r2)<tolM){ converged=true; break; }
+    const hStep1 = Math.max(Math.abs(eTop),1e-6)*1e-5;
+    const hStep2 = Math.max(Math.abs(eBot),1e-6)*1e-5;
+    const fA = computeForces(eTop+hStep1,eBot,p);
+    const fB = computeForces(eTop,eBot+hStep2,p);
+    const dN1=(fA.N-f.N)/hStep1, dM1=(fA.M-f.M)/hStep1;
+    const dN2=(fB.N-f.N)/hStep2, dM2=(fB.M-f.M)/hStep2;
+    const det = dN1*dM2 - dN2*dM1;
+    if(Math.abs(det)<1e-25) break;
+    const deTop = (-r1*dM2 + r2*dN2)/det;
+    const deBot = (-dN1*r2 + dM1*r1)/det;
+    eTop += deTop*0.85;
+    eBot += deBot*0.85;
+  }
+  return {eTop, eBot, converged};
+}
+
+function runCheck(){
+  const b=num('b'), h=num('h');
+  const covSide=num('covSide');
+  const fck=num('fck'), Es=num('Es'), longTerm=chk('longTerm'), theta=num('theta');
+  const P = num('P')*1000;   // kN -> N
+  const M = num('M')*1e6;    // kNm -> N.mm
+
+  let Ec = 5000*Math.sqrt(fck);
+  if(longTerm) Ec = Ec/(1+theta);
+
+  const {tension, compression} = readLayers(h);
+  const AstTotal = tension.reduce((s,l)=>s+l.A,0);
+  const d = tension.reduce((s,l)=>s+l.A*l.y,0)/AstTotal;
+
+  const structLayers = [
+    ...tension.map(l=>({A:l.A,y:l.y})),
+    ...compression.filter(l=>l.role==='structural').map(l=>({A:l.A,y:l.y}))
+  ];
+
+  const p = {b,h,layers:structLayers,Es,Ec};
+  const sol = solveSection(p, P, M);
+  const {eTop, eBot, converged} = sol;
+
+  let x;
+  const fullyCompressed = (eTop>=0 && eBot>=0);
+  if(fullyCompressed){ x = h+1; }
+  else if(eTop<=0 && eBot<=0){ x = -1; }
+  else { x = eTop/(eTop-eBot)*h; }
+
+  const strainAtD_compConv = eTop + (eBot-eTop)*(d/h);
+  const eps1 = -strainAtD_compConv;
+
+  const results = document.getElementById('results');
+  results.style.display='block';
+
+  const tblSection = document.getElementById('tblSection');
+  let layerRows = tension.map(l=>`<tr><th>Tension ${l.label} — φ${l.phi.toFixed(0)} @ ${l.s.toFixed(0)} c/c, cover ${l.c.toFixed(0)}</th><td class="val">${l.A.toFixed(0)} mm² @ y=${l.y.toFixed(0)}</td></tr>`).join('');
+  layerRows += compression.map(l=>`<tr><th>Compression ${l.label} (${l.role}) — φ${l.phi.toFixed(0)} @ ${l.s.toFixed(0)} c/c, cover ${l.c.toFixed(0)}</th><td class="val">${l.A.toFixed(0)} mm² @ y=${l.y.toFixed(0)}${l.role==='distribution'?' (excluded from solve)':''}</td></tr>`).join('');
+
+  tblSection.innerHTML = `
+    <tr><th>b × h</th><td class="val">${b.toFixed(0)} × ${h.toFixed(0)} mm</td></tr>
+    ${layerRows}
+    <tr><th>Ast total (tension) / d (centroid)</th><td class="val">${AstTotal.toFixed(0)} mm² / ${d.toFixed(0)} mm</td></tr>
+    <tr><th>fck / Ec used${longTerm?' (long-term, θ='+theta.toFixed(2)+')':' (short-term)'}</th><td class="val">${fck} N/mm² / ${Ec.toFixed(0)} N/mm²</td></tr>
+    <tr><th>Es</th><td class="val">${Es.toFixed(0)} N/mm²</td></tr>
+    <tr><th>P (service)</th><td class="val">${(P/1000).toFixed(1)} kN (${P>=0?'+ compression':'tension'})</td></tr>
+    <tr><th>M (service)</th><td class="val">${(M/1e6).toFixed(1)} kNm</td></tr>
+  `;
+
+  const tblEq = document.getElementById('tblEquilibrium');
+  tblEq.innerHTML = !converged ? `<tr><td colspan="2" style="color:var(--amber);font-weight:600;">Solver did not fully converge — check inputs. Results below are the best available estimate.</td></tr>` : '';
+  tblEq.innerHTML += `
+    <tr><th>Neutral axis depth, x (from compression face)</th><td class="val">${fullyCompressed? 'n/a (uncracked)' : x.toFixed(1)+' mm'}</td></tr>
+    <tr><th>Strain, top fibre</th><td class="val">${eTop.toExponential(3)}</td></tr>
+    <tr><th>Strain, bottom fibre</th><td class="val">${eBot.toExponential(3)}</td></tr>
+    <tr><th>Section state</th><td class="val">${fullyCompressed? 'Uncracked (net compression)' : 'Cracked in flexure'}</td></tr>
+  `;
+
+  const verdictBox = document.getElementById('verdictBox');
+  let limit = exposureSel.value==='custom' ? num('customLimit') : parseFloat(exposureSel.value);
+
+  const tblCrack = document.getElementById('tblCrack');
+  const extraNote = document.getElementById('extraNote');
+
+  if(fullyCompressed){
+    tblCrack.innerHTML = `<tr><td colspan="2">Section is entirely under compressive strain for this P, M combination — no flexural tension, hence no flexural crack forms.</td></tr>`;
+    extraNote.innerHTML = `<div class="note">Axial compression is large enough relative to the applied moment that the section does not crack in flexure. Governing crack width = 0 mm.</div>`;
+    verdictBox.className='verdict pass';
+    verdictBox.innerHTML = `<span class="badge">PASS</span> Governing crack width = 0 mm (uncracked section) ≤ permissible ${limit.toFixed(2)} mm`;
+    renderStressChecks({eTop,eBot,d,h,Es,Ec,fck,compression});
+    drawSketch({b,h,tension,compression,covSide,P,M,x:null,fullyCompressed:true});
+    return;
+  }
+
+  // tension stiffening correction, Annex F eq. F-2 (a' = h, surface crack at tension face); Layer 1 governs a_cr
+  const L1 = tension[0];
+  const aPrime = h;
+  const denom = 3*Es*AstTotal*(d-x);
+  let epsM = eps1;
+  if(denom>0 && (h-x)>0){
+    epsM = eps1 - (b*(h-x)*(aPrime-x))/denom;
+  }
+  const epsMClamped = Math.max(epsM,0);
+
+  const acrMid = Math.sqrt(Math.pow(L1.s/2,2) + Math.pow(L1.c+L1.phi/2,2)) - L1.phi/2;
+  const acrCorner = Math.sqrt(Math.pow(L1.c+L1.phi/2,2) + Math.pow(covSide+L1.phi/2,2)) - L1.phi/2;
+
+  function wcr(acr, cmin){
+    if((h-x)<=0) return 0;
+    return (3*acr*epsMClamped) / (1 + 2*(acr-cmin)/(h-x));
+  }
+  const wMid = wcr(acrMid, L1.c);
+  const wCorner = wcr(acrCorner, L1.c);
+  const governing = Math.max(wMid, wCorner);
+  const governingLoc = wMid>=wCorner ? 'midway between bars' : 'corner bar';
+
+  tblCrack.innerHTML = `
+    <tr><th>ε₁ — strain at Ast centroid (ignoring stiffening)</th><td class="val">${eps1.toExponential(3)}</td></tr>
+    <tr><th>ε_m — average strain (with tension stiffening, Annex F eq. F-2)</th><td class="val">${epsMClamped.toExponential(3)}${epsM<0?' (clamped from negative)':''}</td></tr>
+    <tr><th>a_cr — midway between bars (Layer 1: φ${L1.phi.toFixed(0)} @ ${L1.s.toFixed(0)})</th><td class="val">${acrMid.toFixed(1)} mm</td></tr>
+    <tr><th>a_cr — corner bar</th><td class="val">${acrCorner.toFixed(1)} mm</td></tr>
+    <tr><th>w_cr — midway between bars</th><td class="val">${wMid.toFixed(3)} mm</td></tr>
+    <tr><th>w_cr — corner bar</th><td class="val">${wCorner.toFixed(3)} mm</td></tr>
+    <tr class="governing"><th>Governing crack width (${governingLoc})</th><td class="val">${governing.toFixed(3)} mm</td></tr>
+  `;
+  extraNote.innerHTML = `<div class="note">Neutral axis at x = ${x.toFixed(1)} mm from the compression face (d = ${d.toFixed(0)} mm), so the section is
+    partially cracked. The axial compression P = ${(P/1000).toFixed(1)} kN has already reduced the tensile strain
+    compared to a bending-only case with the same M. a<sub>cr</sub> geometry is based on Layer 1 (nearest the tension
+    face) only.</div>`;
+
+  const pass = governing <= limit;
+  verdictBox.className = 'verdict ' + (pass?'pass':'fail');
+  verdictBox.innerHTML = `<span class="badge">${pass?'PASS':'FAIL'}</span> Governing crack width = ${governing.toFixed(3)} mm ${pass?'≤':'>'} permissible ${limit.toFixed(2)} mm`;
+
+  renderStressChecks({eTop,eBot,d,h,Es,Ec,fck,compression});
+  drawSketch({b,h,tension,compression,covSide,P,M,x,fullyCompressed:false});
+}
+
+// ---- SLS stress checks, IS 456 Annex B permissible working stresses ----
+function renderStressChecks(p){
+  const {eTop,eBot,d,h,Es,Ec,fck,compression} = p;
+  const tbl = document.getElementById('tblStress');
+  const note = document.getElementById('stressNote');
+
+  const strainAtD = eTop + (eBot-eTop)*(d/h);
+  const stressConcTop = eTop>0 ? Ec*eTop : 0;
+  const stressSteelD  = -strainAtD*Es;
+
+  const permCbc = sigmaCbc(fck);
+  const sstSel = steelGradeSel.value;
+  const permSst = sstSel==='custom' ? num('customSst') : parseFloat(sstSel);
+
+  const cbcPass = stressConcTop <= permCbc;
+  let rows = `
+    <tr><th>Concrete — extreme compression fibre stress</th><td class="val">${stressConcTop.toFixed(2)} N/mm²</td></tr>
+    <tr><th>Concrete — permissible σ<sub>cbc</sub> (Table 21, f<sub>ck</sub>=${fck})</th><td class="val">${permCbc.toFixed(2)} N/mm²</td></tr>
+    <tr><th>Concrete check</th><td class="val" style="color:${cbcPass?'var(--green)':'var(--amber)'};font-weight:700;">${cbcPass?'OK':'EXCEEDS PERMISSIBLE'}</td></tr>
+  `;
+
+  if(stressSteelD>0){
+    const sstPass = stressSteelD <= permSst;
+    rows += `
+      <tr><th>Steel (tension centroid) — service stress</th><td class="val">${stressSteelD.toFixed(1)} N/mm²</td></tr>
+      <tr><th>Steel — permissible σ<sub>st</sub> (Table 22)</th><td class="val">${permSst.toFixed(0)} N/mm²</td></tr>
+      <tr><th>Steel check</th><td class="val" style="color:${sstPass?'var(--green)':'var(--amber)'};font-weight:700;">${sstPass?'OK':'EXCEEDS PERMISSIBLE'}</td></tr>
+    `;
+  } else {
+    rows += `<tr><th>Steel (tension centroid)</th><td class="val">In compression (${(-stressSteelD).toFixed(1)} N/mm²) — tension check n/a</td></tr>`;
+  }
+
+  compression.filter(l=>l.role==='structural').forEach(l=>{
+    const strainAtL = eTop + (eBot-eTop)*(l.y/h);
+    const stressL = strainAtL*Es;
+    rows += `<tr><th>Compression ${l.label} — service stress</th><td class="val">${stressL.toFixed(1)} N/mm² ${stressL>=0?'(compression)':'(tension)'}</td></tr>`;
+  });
+
+  tbl.innerHTML = rows;
+  note.innerHTML = `<div class="note">Stresses are the elastic values from the same cracked-section solution used for the crack-width
+    check above (service loads). σ<sub>cbc</sub> and σ<sub>st</sub> are IS 456 Annex B working-stress-method permissible
+    values — a supplementary check, independent of the Annex F crack-width limit (which does not depend on steel grade).</div>`;
+}
+
+// ---- Sketch: section, reinforcement, P & M, neutral axis ----
+function drawSketch(p){
+  const {b,h,tension,compression,covSide,P,M,x,fullyCompressed} = p;
+  const W=640,H=470;
+  const drawW=260;
+  const maxDrawH=320, minDrawH=100;
+  const drawH=Math.min(maxDrawH,Math.max(minDrawH, drawW*(h/Math.min(b,h*1.2))));
+  const x0=(W-drawW)/2, y0=60;
+  const inset=22; // fixed pixel inset so bars never sit on the section edge
+
+  const scaleY = drawH/h;
+  const naY = fullyCompressed? null : y0 + x*scaleY;
+
+  function barRow(layer, color, isCompressionSide){
+    const yPos = isCompressionSide ? y0 + layer.y*scaleY : y0 + layer.y*scaleY;
+    const n = Math.min(9, Math.max(3, Math.round((drawW-2*inset)/28)));
+    let g='';
+    for(let i=0;i<n;i++){
+      const bx = n===1 ? x0+drawW/2 : x0+inset + ((drawW-2*inset)/(n-1))*i;
+      g += `<circle cx="${bx.toFixed(1)}" cy="${yPos.toFixed(1)}" r="5" fill="${color}" stroke="#0d2a3d" stroke-width="0.8"/>`;
+    }
+    return g;
+  }
+
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:640px;width:100%;font-family:var(--sans);">`;
+  svg += `<rect x="${x0}" y="${y0}" width="${drawW}" height="${drawH}" fill="#FBFCFD" stroke="#1B4F72" stroke-width="2.2"/>`;
+  svg += `<line x1="${x0}" y1="${y0}" x2="${x0+drawW}" y2="${y0}" stroke="#1B4F72" stroke-width="2.2"/>`;
+
+  if(!fullyCompressed){
+    svg += `<line x1="${x0}" y1="${y0+drawH}" x2="${x0+drawW}" y2="${y0+drawH}" stroke="#D68910" stroke-width="3"/>`;
+    for(let i=0;i<drawW;i+=14){
+      svg += `<line x1="${x0+i}" y1="${y0+drawH}" x2="${x0+i+7}" y2="${y0+drawH+8}" stroke="#D68910" stroke-width="1.2"/>`;
+    }
+    svg += `<text x="${x0+drawW/2}" y="${y0+drawH+22}" text-anchor="middle" font-size="10.5" fill="#D68910" font-weight="600">TENSION FACE — cracks checked here</text>`;
+  }
+
+  // tension layers
+  let ty = drawH-20;
+  tension.forEach((l,i)=>{
+    svg += barRow(l,'#1B4F72',false);
+    svg += `<text x="${x0+drawW+10}" y="${(y0+l.y*scaleY+4).toFixed(1)}" font-size="10" fill="#1C2B36">T${i+1}: φ${l.phi.toFixed(0)} @ ${l.s.toFixed(0)}</text>`;
+  });
+
+  // compression layers
+  compression.forEach((l,i)=>{
+    const col = l.role==='distribution' ? '#8a8f95' : '#1B4F72';
+    svg += barRow(l,col,true);
+    svg += `<text x="${x0+drawW+10}" y="${(y0+l.y*scaleY+4).toFixed(1)}" font-size="10" fill="#1C2B36">C${i+1} (${l.role}): φ${l.phi.toFixed(0)} @ ${l.s.toFixed(0)}</text>`;
+  });
+
+  if(!fullyCompressed && naY!==null && naY>y0 && naY<y0+drawH){
+    svg += `<line x1="${x0-14}" y1="${naY.toFixed(1)}" x2="${x0+drawW+14}" y2="${naY.toFixed(1)}" stroke="#1E7A46" stroke-width="1.6" stroke-dasharray="6,4"/>`;
+    svg += `<text x="${x0-16}" y="${(naY-4).toFixed(1)}" text-anchor="end" font-size="10.5" fill="#1E7A46" font-weight="600">N.A. x=${x.toFixed(0)}</text>`;
+  }
+
+  const dimX = x0-46;
+  svg += `<line x1="${dimX}" y1="${y0}" x2="${dimX}" y2="${y0+drawH}" stroke="#5B6B76" stroke-width="1"/>`;
+  svg += `<line x1="${dimX-4}" y1="${y0}" x2="${dimX+4}" y2="${y0}" stroke="#5B6B76" stroke-width="1"/>`;
+  svg += `<line x1="${dimX-4}" y1="${y0+drawH}" x2="${dimX+4}" y2="${y0+drawH}" stroke="#5B6B76" stroke-width="1"/>`;
+  svg += `<text x="${dimX-6}" y="${y0+drawH/2}" text-anchor="end" font-size="10.5" fill="#5B6B76">h=${h.toFixed(0)}</text>`;
+
+  const midY = y0+drawH/2;
+  const compArrows = P>=0;
+  const pArrLen=34;
+  if(compArrows){
+    svg += `<line x1="${x0-pArrLen-14}" y1="${midY}" x2="${x0-14}" y2="${midY}" stroke="#1B4F72" stroke-width="2.4" marker-end="url(#arrowB)"/>`;
+    svg += `<line x1="${x0+drawW+14}" y1="${midY}" x2="${x0+drawW+pArrLen+14}" y2="${midY}" stroke="#1B4F72" stroke-width="2.4" marker-start="url(#arrowBrev)"/>`;
+  } else {
+    svg += `<line x1="${x0-14}" y1="${midY}" x2="${x0-pArrLen-14}" y2="${midY}" stroke="#1B4F72" stroke-width="2.4" marker-end="url(#arrowB)"/>`;
+    svg += `<line x1="${x0+drawW+pArrLen+14}" y1="${midY}" x2="${x0+drawW+14}" y2="${midY}" stroke="#1B4F72" stroke-width="2.4" marker-end="url(#arrowB)"/>`;
+  }
+
+  const mCenterX = x0+drawW+90, mCenterY = midY;
+  const sweep = M>=0 ? 1 : 0;
+  svg += `<path d="M ${mCenterX-16} ${mCenterY-20} A 20 20 0 1 ${sweep} ${mCenterX+16} ${mCenterY-20}" fill="none" stroke="#D68910" stroke-width="2.2" marker-end="url(#arrowAmb)"/>`;
+  svg += `<text x="${mCenterX}" y="${mCenterY+8}" text-anchor="middle" font-size="10.5" fill="#D68910" font-weight="600">M=${(M/1e6).toFixed(1)} kNm</text>`;
+
+  svg += `<text x="${x0+drawW/2}" y="${midY-10}" text-anchor="middle" font-size="10.5" fill="#1B4F72" font-weight="600">P=${(P/1000).toFixed(0)} kN ${P>=0?'(compression)':'(tension)'}</text>`;
+
+  svg += `<text x="${x0+drawW/2}" y="${y0+drawH-6}" text-anchor="middle" font-size="9" fill="#5B6B76">side cover=${covSide.toFixed(0)} (illustrative inset — see a_cr for actual value)</text>`;
+
+  svg = svg.replace('</svg>', `
+    <defs>
+      <marker id="arrowB" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#1B4F72"/></marker>
+      <marker id="arrowBrev" markerWidth="8" markerHeight="8" refX="0" refY="3" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z" fill="#1B4F72"/></marker>
+      <marker id="arrowAmb" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#D68910"/></marker>
+    </defs>
+  </svg>`);
+
+  document.getElementById('sketchWrap').innerHTML = svg +
+    `<div class="note" style="text-align:left;margin-top:10px;">Section drawn schematically (fixed illustrative width and bar inset — not to true b:scale for per-metre strips). Grey dots = distribution steel (excluded from the M–N and crack-width calc); blue dots = tension/structural-compression reinforcement.</div>`;
+}
+</script>
+</body>
+</html>
