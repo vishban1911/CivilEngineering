@@ -3,284 +3,375 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tool - M-N Interaction Curve (IS 456:2000)</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<title>Tool — M-N Interaction Curve (IS 456:2000, Annex E &amp; Cl. 39)</title>
 <style>
-  :root{
-    --bp-blue:#1B4F72;
-    --bp-blue-light:#EAF1F6;
-    --bp-amber:#D68910;
-    --bp-amber-light:#FCF3E3;
-    --bp-green:#1E7B4D;
-    --bp-green-light:#E8F5EE;
-    --bg:#F7F9FB;
-    --line:#C9D6E0;
-    --ink:#1C2B36;
-    --ink-soft:#5B7182;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0;
-    font-family:'Inter',system-ui,sans-serif;
-    color:var(--ink);
-    background-color:var(--bg);
-    background-image:
-      linear-gradient(rgba(27,79,114,0.055) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(27,79,114,0.055) 1px, transparent 1px);
-    background-size:24px 24px;
-    padding-bottom:60px;
-  }
-  .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
-  header.titleblock{
-    background:var(--bp-blue);
-    color:#fff;
-    padding:22px 0;
-    border-bottom:6px solid var(--bp-amber);
-    margin-bottom:22px;
-  }
-  header.titleblock .wrap{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px;}
-  header.titleblock h1{margin:0;font-size:22px;font-weight:700;letter-spacing:0.2px;}
-  header.titleblock .code-ref{
-    font-family:'Roboto Mono',monospace;
-    font-size:13px;
-    background:rgba(255,255,255,0.14);
-    padding:6px 12px;
-    border:1px solid rgba(255,255,255,0.35);
-    border-radius:2px;
-  }
-  header.titleblock .sub{font-size:12.5px;opacity:0.85;margin-top:2px;}
+:root{
+  --input-bg:#FAF8F5;
+  --input-accent:#3D5A73;
+  --output-bg:#F0F4F7;
+  --output-accent:#1B4F72;
+  --divider:#D5D0C8;
+  --amber:#D68910;
+  --amber-light:#FCF3E3;
+  --red:#B0413E;
+  --red-light:#FBEAE9;
+  --green:#3F7D5C;
+  --green-light:#EAF3EE;
+  --ink:#1C2B36;
+  --sub:#5B6B76;
+  --border:#DAD5CB;
+  --mono: "Roboto Mono","SFMono-Regular",Consolas,"Liberation Mono",monospace;
+  --sans: "Inter","Segoe UI",Roboto,-apple-system,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:var(--sans);
+  color:var(--ink);
+  background:#fff;
+}
+.sheet{max-width:1440px;margin:0 auto;padding:0 0 40px;}
 
-  .panel{
-    background:#fff;
-    border:1px solid var(--line);
-    border-radius:3px;
-    margin-bottom:18px;
-    box-shadow:0 1px 2px rgba(27,79,114,0.06);
-  }
-  .panel > .panel-head{
-    background:var(--bp-blue-light);
-    border-bottom:1px solid var(--line);
-    padding:10px 16px;
-    font-weight:600;
-    font-size:13.5px;
-    color:var(--bp-blue);
-    text-transform:uppercase;
-    letter-spacing:0.4px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    flex-wrap:wrap;
-    gap:8px;
-  }
-  .panel > .panel-body{padding:16px;}
+/* ---------- header ---------- */
+header.titleblock{
+  padding:16px 24px;
+  border-bottom:2px solid var(--output-accent);
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  gap:14px;
+  background:#fff;
+}
+header.titleblock .titlewrap h1{margin:0 0 3px;font-size:19px;color:var(--output-accent);letter-spacing:.2px;}
+header.titleblock .titlewrap .subtitle{font-size:12px;color:var(--sub);}
+header.titleblock .code-tag{
+  font-family:var(--mono);
+  font-size:12px;
+  color:#fff;
+  background:var(--output-accent);
+  padding:5px 10px;
+  border-radius:2px;
+  white-space:nowrap;
+  height:fit-content;
+}
+button.btn-print{
+  font-family:var(--sans);
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--output-accent);
+  background:#fff;
+  border:1.5px solid var(--output-accent);
+  border-radius:3px;
+  padding:7px 12px;
+  cursor:pointer;
+  height:fit-content;
+}
+button.btn-print:hover{background:var(--output-bg);}
 
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-  @media (max-width:820px){.grid2,.grid3{grid-template-columns:1fr;}}
+/* ---------- print / PDF export ---------- */
+@media print{
+  .no-print{display:none !important;}
+  body{background:#fff;}
+  .worksheet{display:block;}
+  .col-input, .col-output{
+    width:100% !important;
+    max-height:none !important;
+    overflow:visible !important;
+    position:static !important;
+    background:#fff !important;
+  }
+  .col-divider{display:none;}
+  .calc-sticky{position:static;padding:10px 0;}
+  .placeholder{display:none;}
+  details.method .body{display:block;}
+  .section{page-break-inside:avoid;}
+}
+header.titleblock .headerDisclaimer{
+  flex-basis:100%;
+  font-size:11px;
+  line-height:1.45;
+  color:var(--sub);
+  border-top:1px dashed var(--border);
+  padding-top:8px;
+  margin-top:2px;
+}
+header.titleblock .headerDisclaimer strong{color:var(--ink);}
 
-  label{
-    display:block;
-    font-size:12px;
-    font-weight:600;
-    color:var(--ink-soft);
-    margin-bottom:4px;
-    text-transform:uppercase;
-    letter-spacing:0.3px;
-  }
-  .field{margin-bottom:12px;}
-  .field .unit{font-weight:400;text-transform:none;color:#8598a6;}
-  input[type=number], input[type=text], select{
-    width:100%;
-    font-family:'Roboto Mono',monospace;
-    font-size:14px;
-    padding:8px 9px;
-    border:1px solid var(--line);
-    border-radius:2px;
-    background:#fff;
-    color:var(--ink);
-  }
-  input[type=text]{font-family:'Inter',sans-serif;}
-  input:focus, select:focus{outline:2px solid var(--bp-blue);outline-offset:0;}
-  input:disabled{background:#EFF2F5;color:#9AAAB5;}
+/* ---------- two-column worksheet ---------- */
+.worksheet{display:flex;align-items:flex-start;}
+.col-input{
+  width:38%;
+  background:var(--input-bg);
+  padding:18px 20px 0;
+  max-height:calc(100vh - 90px);
+  overflow-y:auto;
+  position:sticky;
+  top:0;
+}
+.col-divider{width:2px;align-self:stretch;background:var(--divider);flex:0 0 2px;}
+.col-output{
+  width:62%;
+  background:var(--output-bg);
+  padding:18px 24px 40px;
+  min-height:calc(100vh - 90px);
+}
+@media(max-width:900px){
+  .worksheet{flex-direction:column;}
+  .col-input,.col-output{width:100%;max-height:none;position:static;}
+  .col-divider{display:none;height:2px;width:100%;}
+}
 
-  .layer-box{
-    border:1px dashed var(--line);
-    border-radius:2px;
-    padding:12px;
-    margin-bottom:10px;
-    background:#FBFDFE;
-  }
-  .layer-box.disabled{opacity:0.55;}
-  .layer-box h4{margin:0;font-size:12.5px;color:var(--bp-blue);font-weight:700;display:flex;align-items:center;gap:8px;}
-  .layer-box h4 input[type=checkbox]{width:auto;margin:0;}
-  .layer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px;}
+/* ---------- section blocks (no heavy boxed panels) ---------- */
+.section{margin-bottom:20px;}
+.section h2{
+  margin:0 0 10px;
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.6px;
+  font-weight:700;
+  padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+.col-input .section h2{color:var(--input-accent);}
+.col-output .section h2{color:var(--output-accent);}
+.section h3.sub{
+  margin:14px 0 8px;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+  color:var(--sub);
+  border-bottom:1px dashed var(--border);
+  padding-bottom:4px;
+}
 
-  .face-title{
-    font-weight:700;
-    font-size:13.5px;
-    color:var(--ink);
-    margin:0 0 10px 0;
-    padding-bottom:6px;
-    border-bottom:2px solid var(--bp-blue);
-  }
+.field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;}
+.field label{font-size:13.5px;color:var(--ink);font-weight:500;}
+.field .hint{display:block;font-size:11px;color:var(--sub);font-weight:400;}
+.field input[type=number], .field select{
+  font-family:var(--mono);
+  font-size:13px;
+  width:130px;
+  padding:5px 7px;
+  border:1px solid var(--input-accent);
+  border-radius:2px;
+  background:#fff;
+  text-align:right;
+  color:var(--ink);
+}
+.field input[type=number]:focus, .field select:focus{outline:2px solid var(--input-accent);outline-offset:1px;}
+.field select{width:210px;text-align:left;}
 
-  table{width:100%;border-collapse:collapse;font-size:13px;}
-  th{
-    background:var(--bp-blue-light);
-    color:var(--bp-blue);
-    font-size:11.5px;
-    text-transform:uppercase;
-    letter-spacing:0.3px;
-    text-align:left;
-    padding:8px 8px;
-    border:1px solid var(--line);
-  }
-  td{padding:6px 8px;border:1px solid var(--line);font-family:'Roboto Mono',monospace;vertical-align:middle;}
-  td.txt{font-family:'Inter',sans-serif;}
-  table input{padding:5px 6px;font-size:13px;}
-  tr:nth-child(even) td{background:#FBFDFE;}
-  tr.group-head td{
-    background:var(--bp-blue);
-    color:#fff;
-    font-family:'Inter',sans-serif;
-    font-weight:700;
-    font-size:12.5px;
-    text-transform:uppercase;
-    letter-spacing:0.3px;
-  }
-  tr.governing td{background:var(--bp-amber-light) !important;}
+.divider{border:none;border-top:1px dashed var(--border);margin:10px 0;}
 
-  .btn{
-    font-family:'Inter',sans-serif;
-    font-weight:600;
-    font-size:13px;
-    padding:9px 16px;
-    border-radius:2px;
-    border:1px solid var(--bp-blue);
-    background:#fff;
-    color:var(--bp-blue);
-    cursor:pointer;
-  }
-  .btn:hover{background:var(--bp-blue-light);}
-  .btn-primary{
-    background:var(--bp-blue);
-    color:#fff;
-    font-size:15px;
-    padding:13px 20px;
-    width:100%;
-    border:none;
-  }
-  .btn-primary:hover{background:#163f5c;}
+.layerRow{
+  display:grid;
+  grid-template-columns:22px 68px 1fr 1fr 1fr;
+  gap:6px;
+  align-items:center;
+  margin-bottom:6px;
+  font-size:12px;
+}
+.layerRow .lbl{color:var(--sub);font-size:11px;}
+.layerRow input[type=checkbox]{width:auto;}
+.layerRow input[type=number]{
+  font-family:var(--mono);font-size:12px;width:100%;padding:4px 5px;
+  border:1px solid var(--input-accent);border-radius:2px;background:#fff;text-align:right;
+}
+.layerHead{
+  display:grid;grid-template-columns:22px 68px 1fr 1fr 1fr;gap:6px;
+  font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);margin-bottom:4px;
+}
 
-  .flag{
-    display:inline-block;
-    font-family:'Inter',sans-serif;
-    font-weight:700;
-    font-size:11.5px;
-    letter-spacing:0.3px;
-    padding:4px 9px;
-    border-radius:2px;
-  }
-  .flag.pass{background:var(--bp-green-light);color:var(--bp-green);border:1px solid var(--bp-green);}
-  .flag.fail{background:var(--bp-amber-light);color:var(--bp-amber);border:1px solid var(--bp-amber);}
+/* sticky calculate button at bottom of input column */
+.calc-sticky{
+  position:sticky;
+  bottom:0;
+  background:var(--input-bg);
+  padding:14px 0 18px;
+  margin-top:6px;
+  border-top:1px solid var(--border);
+}
+button#runBtn{
+  width:100%;
+  padding:12px;
+  background:var(--input-accent);
+  color:#fff;
+  border:none;
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:.3px;
+  cursor:pointer;
+  border-radius:2px;
+}
+button#runBtn:hover{background:#2c435a;}
 
-  .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-  @media (max-width:820px){.summary-grid{grid-template-columns:1fr 1fr;}}
-  .stat{
-    border:1px solid var(--line);
-    border-radius:2px;
-    padding:12px;
-    background:#FBFDFE;
-  }
-  .stat.highlight{background:var(--bp-amber-light);border-color:var(--bp-amber);}
-  .stat .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:0.3px;color:var(--ink-soft);font-weight:600;}
-  .stat .stat-val{font-family:'Roboto Mono',monospace;font-size:19px;font-weight:700;color:var(--bp-blue);margin-top:4px;}
-  .stat.highlight .stat-val{color:#8a5c07;}
-  .stat .stat-sub{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+/* ---------- notes ---------- */
+.note{
+  font-size:12px;
+  color:var(--sub);
+  background:#fff;
+  border-left:3px solid var(--input-accent);
+  padding:8px 12px;
+  margin-top:10px;
+}
+.col-output .note{border-left-color:var(--output-accent);}
+.warn-note{
+  font-size:12px;
+  color:#8a5a00;
+  background:var(--amber-light);
+  border-left:3px solid var(--amber);
+  padding:8px 12px;
+  margin-top:10px;
+}
 
-  .note{font-size:12.5px;color:var(--ink-soft);line-height:1.5;}
-  .note ul{margin:6px 0 0 18px;padding:0;}
-  .note li{margin-bottom:5px;}
+/* ---------- method/assumptions ---------- */
+details.method{
+  margin:16px 24px 0;
+  border:1px solid var(--border);
+  border-left:3px solid var(--output-accent);
+  background:#fff;
+}
+details.method summary{
+  cursor:pointer;font-size:12px;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--output-accent);padding:9px 14px;font-weight:700;
+}
+details.method .body{padding:0 14px 14px;font-size:13px;line-height:1.55;}
+details.method ul{margin:6px 0;padding-left:20px;}
 
-  footer.disclaimer{
-    max-width:1180px;
-    margin:30px auto 0 auto;
-    padding:16px 20px;
-    border:1px solid var(--bp-amber);
-    background:var(--bp-amber-light);
-    border-radius:3px;
-    font-size:12.5px;
-    color:#6b4a08;
-    line-height:1.55;
-  }
-  footer.disclaimer b{color:#5a3c06;}
+/* ---------- output placeholder & verdict ---------- */
+.placeholder{
+  font-size:13.5px;color:var(--sub);padding:40px 10px;text-align:center;
+  border:1px dashed var(--border);
+}
+.verdict{
+  padding:14px 16px;
+  margin-bottom:16px;
+  border:1px solid;
+  font-size:15px;
+  font-weight:700;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.verdict.pass{background:var(--green-light);border-color:var(--green);color:var(--green);}
+.verdict.fail{background:var(--red-light);border-color:var(--red);color:var(--red);}
+.verdict .badge{
+  font-family:var(--mono);
+  font-size:13px;
+  padding:3px 10px;
+  border-radius:2px;
+  color:#fff;
+}
+.verdict.pass .badge{background:var(--green);}
+.verdict.fail .badge{background:var(--red);}
+.verdict .sub{font-size:12px;font-weight:400;color:var(--ink);flex-basis:100%;}
 
-  .hidden{display:none;}
-  .chart-wrap{width:100%;overflow-x:auto;}
-  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--ink-soft);margin-top:8px;}
-  .legend span{display:inline-flex;align-items:center;gap:6px;}
-  .swatch{width:14px;height:3px;display:inline-block;}
-  .dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+table.calc{width:100%;border-collapse:collapse;font-size:13px;background:#fff;}
+table.calc caption{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--output-accent);margin-bottom:6px;font-weight:700;}
+table.calc td, table.calc th{padding:5px 8px;border-bottom:1px solid var(--border);}
+table.calc th{text-align:left;color:var(--sub);font-weight:500;width:55%;}
+table.calc td.val{font-family:var(--mono);text-align:right;white-space:nowrap;color:var(--ink);}
+table.calc tr.governing td{font-weight:700;color:var(--output-accent);background:var(--amber-light);}
+table.calc tr.group-head td{background:var(--output-accent);color:#fff;font-weight:700;text-transform:uppercase;font-size:11.5px;letter-spacing:.3px;}
+table.calc td.chip-cell{text-align:right;}
+.chip{display:inline-block;font-family:var(--sans);font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:2px;color:#fff;letter-spacing:.2px;}
+.chip.pass{background:var(--green);}
+.chip.fail{background:var(--red);}
 
-  .sketch-panel{
-    border:1px solid var(--line);
-    border-radius:2px;
-    padding:12px;
-    background:#FBFDFE;
-  }
-  .sketch-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-soft);margin-top:6px;}
-  .sketch-legend span{display:inline-flex;align-items:center;gap:5px;}
-  .bar-dot{width:11px;height:11px;border-radius:50%;display:inline-block;border:1.5px solid var(--bp-blue);}
-  .bar-dot.solid{background:var(--bp-blue);}
-  .bar-dot.hollow{background:#fff;}
+table.combo-table{width:100%;border-collapse:collapse;font-size:12.5px;background:#fff;}
+table.combo-table th{text-align:left;font-size:9.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--sub);padding:4px 6px;border-bottom:1px solid var(--border);}
+table.combo-table td{padding:4px 6px;border-bottom:1px solid var(--border);}
+table.combo-table td.txt{color:var(--sub);font-size:11.5px;}
+table.combo-table input{font-family:var(--mono);font-size:12px;width:100%;padding:4px 5px;border:1px solid var(--input-accent);border-radius:2px;background:#fff;text-align:right;}
+table.combo-table tr.combo-name-row td{background:var(--input-accent);padding:6px;}
+table.combo-table tr.combo-name-row input[type=text]{font-family:var(--sans);font-weight:600;text-align:left;background:rgba(255,255,255,0.92);}
 
-  table.combo-table{margin:0;}
-  table.combo-table td, table.combo-table th{padding:5px 8px;font-size:12.5px;}
-  table.combo-table tr.combo-name-row td{
-    background:var(--bp-blue);
-    padding:6px 8px;
-  }
-  table.combo-table tr.combo-name-row input[type=text]{
-    background:rgba(255,255,255,0.92);
-    font-weight:600;
-    max-width:320px;
-  }
-  table.combo-table tr.case-row td.txt{color:var(--ink-soft);font-size:12px;}
+.chart-wrap{width:100%;overflow-x:auto;}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--sub);margin-top:8px;}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.swatch{width:14px;height:3px;display:inline-block;}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+
+.sketch-legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--sub);margin-top:6px;}
+.sketch-legend span{display:inline-flex;align-items:center;gap:5px;}
+.bar-dot{width:11px;height:11px;border-radius:50%;display:inline-block;border:1.5px solid var(--input-accent);}
+.bar-dot.solid{background:var(--input-accent);}
+.bar-dot.hollow{background:#fff;}
+
+footer.disclaimer{
+  margin:20px 24px 0;
+  border-top:1px solid var(--border);
+  padding-top:10px;
+  font-size:10.5px;
+  color:var(--sub);
+  line-height:1.5;
+}
 </style>
 </head>
 <body>
+<div class="sheet">
 
-<header class="titleblock">
-  <div class="wrap">
-    <div>
+  <header class="titleblock">
+    <div class="titlewrap">
       <h1>M-N Interaction Curve — Uniaxial Bending with Axial Load</h1>
-      <div class="sub">Rectangular RC column / pier section &nbsp;|&nbsp; Strain-compatibility method</div>
+      <div class="subtitle">Rectangular RC column / pier section · strain-compatibility method</div>
     </div>
-    <div class="code-ref">IS 456:2000 — Annex E &amp; Cl. 39</div>
-  </div>
-</header>
+    <span class="code-tag">IS 456:2000 — Annex E &amp; Cl. 39</span>
+    <button class="btn-print no-print" onclick="printSheet()" type="button">🖨 Print / Save as PDF</button>
+    <div class="headerDisclaimer"><strong>Disclaimer:</strong> This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction. This is not a substitute for professional judgment or compliance verification against the applicable project-specific code requirements.</div>
+  </header>
 
-<div class="wrap">
+  <details class="method">
+    <summary>Method &amp; assumptions (read before use)</summary>
+    <div class="body">
+      This tool builds the ultimate <strong>P<sub>u</sub>–M<sub>u</sub> interaction envelope for a rectangular
+      column / pier section under uniaxial bending and axial load</strong>, then checks user-supplied load
+      combinations against it.
+      <ul>
+        <li><strong>Strain compatibility (IS 456 Annex E):</strong> maximum concrete strain is 0.0035 at the highly
+        compressed edge when the neutral axis lies within the section (x<sub>u</sub> ≤ D); for x<sub>u</sub> &gt; D
+        the strain profile passes through 0.002 at 3D/7 from the highly compressed edge.</li>
+        <li><strong>Concrete stress block:</strong> parabolic-rectangular per Cl 38.1 (design stress 0.447 f<sub>ck</sub>).
+        Concrete tensile strength is neglected.</li>
+        <li><strong>Reinforcement:</strong> idealised design stress-strain curve per IS 456 Fig. 23 for HYSD bars
+        (Fe 415/500/500D/550); elastic-perfectly-plastic at 0.87f<sub>y</sub> for Fe 250. Displaced concrete area
+        at compression bar locations is deducted.</li>
+        <li><strong>Two branches:</strong> the neutral axis depth x<sub>u</sub> is swept from a shallow depth
+        (tension-controlled) through x<sub>u</sub> → ∞ (pure axial compression), separately for the +M sense (top
+        face in compression) and −M sense (bottom face in compression) — relevant whenever top/bottom reinforcement
+        differs. Axial capacity is capped at P<sub>u,max</sub> = 0.4 f<sub>ck</sub> A<sub>c</sub> + 0.67 f<sub>y</sub>
+        A<sub>sc</sub> per Cl 39.3.</li>
+        <li><strong>Combined P-M utilisation</strong> is computed radially: for each applied (P<sub>u</sub>,
+        M<sub>u</sub>) point, both P and M are scaled together along the same ratio until the pair lands exactly on
+        the capacity envelope. Utilisation = applied ÷ scaled-capacity — this reflects the true combined effect of
+        axial load and moment acting together, not moment capacity checked in isolation at the applied P<sub>u</sub>.</li>
+        <li><strong>Section sketch</strong> is schematic: bar count, diameter and vertical cover are to scale;
+        lateral bar spacing is evenly distributed and indicative only, not a detailing drawing.</li>
+        <li><strong>Not covered by this tool</strong> — verify separately: minimum eccentricity per Cl 25.4
+        (e<sub>min</sub> = unsupported length/500 + D/30, ≥ 20 mm); biaxial bending interaction per Cl 39.6;
+        slenderness / additional moments for slender columns per Cl 39.7; shear, confinement and detailing
+        (Cl 26, IS 13920 for ductile detailing); and section shapes other than rectangular.</li>
+        <li><strong>Scope:</strong> single rectangular section, single steel grade for all bars, uniaxial bending
+        about the axis defined by D only. A real column should be checked in both principal directions.</li>
+      </ul>
+    </div>
+  </details>
 
-  <div class="panel">
-    <div class="panel-head">1. Section &amp; Materials</div>
-    <div class="panel-body">
-      <div class="grid3">
-        <div class="field">
-          <label>Width, b <span class="unit">(mm)</span></label>
-          <input type="number" id="b" value="300" min="100" step="10" oninput="updateSketch()">
-        </div>
-        <div class="field">
-          <label>Overall Depth, D <span class="unit">(mm)</span> — direction of bending</label>
-          <input type="number" id="D" value="500" min="150" step="10" oninput="updateSketch()">
-        </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <div class="note">D is measured in the direction of the applied moment (top ↔ bottom faces below).</div>
-        </div>
+  <div class="worksheet">
+    <!-- ============ INPUT COLUMN ============ -->
+    <aside class="col-input" id="inputCol">
+
+      <div class="section">
+        <h2>Section Geometry</h2>
+        <div class="field"><label>Width, b<span class="hint">mm</span></label><input id="b" type="number" value="300" oninput="updateSketch()"></div>
+        <div class="field"><label>Overall depth, D<span class="hint">mm — direction of bending</span></label><input id="D" type="number" value="500" oninput="updateSketch()"></div>
+        <div class="note">D is measured in the direction of the applied moment (top ↔ bottom faces below).</div>
       </div>
-      <div class="grid3">
+
+      <div class="section">
+        <h2>Materials</h2>
         <div class="field">
           <label>Concrete grade, f<sub>ck</sub></label>
           <select id="fck">
@@ -303,239 +394,144 @@
             <option value="550">Fe 550</option>
           </select>
         </div>
-        <div class="field">
-          <label>&nbsp;</label>
-          <div class="note">Design stress-strain curve for HYSD bars per IS 456 Fig. 23 / Annex E is used for Fe 415/500/500D/550. Fe 250 uses elastic–perfectly-plastic at 0.87f<sub>y</sub>.</div>
-        </div>
+        <div class="note">Design stress-strain curve per IS 456 Fig. 23 / Annex E is used for Fe 415/500/500D/550.
+        Fe 250 uses elastic–perfectly-plastic at 0.87f<sub>y</sub>.</div>
       </div>
-    </div>
-  </div>
 
-  <div class="panel">
-    <div class="panel-head">2. Reinforcement — up to 2 layers per face</div>
-    <div class="panel-body">
-      <div class="grid2">
-        <div>
-          <p class="face-title">TOP face (compression face for +Ve moment)</p>
-          <div class="layer-box">
-            <h4>Layer 1</h4>
-            <div class="layer-grid">
-              <div class="field"><label>Bar dia <span class="unit">(mm)</span></label><input type="number" id="t1dia" value="16" min="0" oninput="updateSketch()"></div>
-              <div class="field"><label>No. of bars</label><input type="number" id="t1n" value="4" min="0" oninput="updateSketch()"></div>
-              <div class="field"><label>Cover to centroid <span class="unit">(mm)</span></label><input type="number" id="t1cov" value="45" min="10" oninput="updateSketch()"></div>
-            </div>
-          </div>
-          <div class="layer-box disabled" id="t2box">
-            <h4><input type="checkbox" id="t2en" onchange="toggleLayer('t2')"> Include Layer 2</h4>
-            <div class="layer-grid">
-              <div class="field"><label>Bar dia <span class="unit">(mm)</span></label><input type="number" id="t2dia" value="16" min="0" disabled oninput="updateSketch()"></div>
-              <div class="field"><label>No. of bars</label><input type="number" id="t2n" value="4" min="0" disabled oninput="updateSketch()"></div>
-              <div class="field"><label>Cover to centroid <span class="unit">(mm)</span></label><input type="number" id="t2cov" value="85" min="10" disabled oninput="updateSketch()"></div>
-            </div>
-          </div>
-        </div>
-        <div>
-          <p class="face-title">BOTTOM face (compression face for -Ve moment)</p>
-          <div class="layer-box">
-            <h4>Layer 1</h4>
-            <div class="layer-grid">
-              <div class="field"><label>Bar dia <span class="unit">(mm)</span></label><input type="number" id="b1dia" value="16" min="0" oninput="updateSketch()"></div>
-              <div class="field"><label>No. of bars</label><input type="number" id="b1n" value="4" min="0" oninput="updateSketch()"></div>
-              <div class="field"><label>Cover to centroid <span class="unit">(mm)</span></label><input type="number" id="b1cov" value="45" min="10" oninput="updateSketch()"></div>
-            </div>
-          </div>
-          <div class="layer-box disabled" id="b2box">
-            <h4><input type="checkbox" id="b2en" onchange="toggleLayer('b2')"> Include Layer 2</h4>
-            <div class="layer-grid">
-              <div class="field"><label>Bar dia <span class="unit">(mm)</span></label><input type="number" id="b2dia" value="16" min="0" disabled oninput="updateSketch()"></div>
-              <div class="field"><label>No. of bars</label><input type="number" id="b2n" value="4" min="0" disabled oninput="updateSketch()"></div>
-              <div class="field"><label>Cover to centroid <span class="unit">(mm)</span></label><input type="number" id="b2cov" value="85" min="10" disabled oninput="updateSketch()"></div>
-            </div>
-          </div>
-        </div>
+      <div class="section">
+        <h2>Reinforcement</h2>
+        <h3 class="sub">Top face (compression face for +Ve moment)</h3>
+        <div class="layerHead"><span></span><span class="lbl">Layer</span><span class="lbl">φ (mm)</span><span class="lbl">No. bars</span><span class="lbl">Cover (mm)</span></div>
+        <div class="layerRow"><span class="lbl">1</span><span class="lbl">Layer 1*</span>
+          <input id="t1dia" type="number" value="16" oninput="updateSketch()"><input id="t1n" type="number" value="4" oninput="updateSketch()"><input id="t1cov" type="number" value="45" oninput="updateSketch()"></div>
+        <div class="layerRow"><input type="checkbox" id="t2en" onchange="toggleLayer('t2')"><span class="lbl">Layer 2</span>
+          <input id="t2dia" type="number" value="16" oninput="updateSketch()"><input id="t2n" type="number" value="4" oninput="updateSketch()"><input id="t2cov" type="number" value="85" oninput="updateSketch()"></div>
+        <div class="note">*Layer 1 is always active. Cover is the distance from the top face to the layer's bar centroid.</div>
+
+        <hr class="divider">
+        <h3 class="sub">Bottom face (compression face for -Ve moment)</h3>
+        <div class="layerHead"><span></span><span class="lbl">Layer</span><span class="lbl">φ (mm)</span><span class="lbl">No. bars</span><span class="lbl">Cover (mm)</span></div>
+        <div class="layerRow"><span class="lbl">1</span><span class="lbl">Layer 1*</span>
+          <input id="b1dia" type="number" value="16" oninput="updateSketch()"><input id="b1n" type="number" value="4" oninput="updateSketch()"><input id="b1cov" type="number" value="45" oninput="updateSketch()"></div>
+        <div class="layerRow"><input type="checkbox" id="b2en" onchange="toggleLayer('b2')"><span class="lbl">Layer 2</span>
+          <input id="b2dia" type="number" value="16" oninput="updateSketch()"><input id="b2n" type="number" value="4" oninput="updateSketch()"><input id="b2cov" type="number" value="85" oninput="updateSketch()"></div>
+        <div class="note">*Layer 1 is always active. Cover is the distance from the bottom face to the layer's bar centroid.</div>
+        <div class="note" id="steelSummary">—</div>
       </div>
-      <div class="note" id="steelSummary" style="margin-top:6px;"></div>
 
-      <p class="face-title" style="margin-top:16px;">Section Sketch</p>
-      <div class="sketch-panel">
+      <div class="section">
+        <h2>Section Sketch</h2>
         <div id="sectionSketch" class="chart-wrap"></div>
-        <div class="note">Schematic cross-section — bar count, diameter and vertical cover are to scale; lateral bar spacing is shown evenly distributed and is indicative only, not a detailing drawing.</div>
+        <div class="note">Schematic cross-section — bar count, diameter and vertical cover are to scale; lateral bar
+        spacing is shown evenly distributed and is indicative only, not a detailing drawing.</div>
       </div>
-    </div>
-  </div>
 
-  <div class="panel">
-    <div class="panel-head">3. Load Combinations</div>
-    <div class="panel-body">
-      <div class="field" style="max-width:360px;">
-        <label>Number of load combinations</label>
-        <select id="numCombos" onchange="generateCombos()">
-          <option value="envelope">Envelope forces only (1 set)</option>
-          <option value="1">1 load combination</option>
-          <option value="2">2 load combinations</option>
-          <option value="3">3 load combinations</option>
-          <option value="4">4 load combinations</option>
-          <option value="5">5 load combinations</option>
-          <option value="6">6 load combinations</option>
-          <option value="8">8 load combinations</option>
-          <option value="10">10 load combinations</option>
-        </select>
-      </div>
-      <div class="note" style="margin-bottom:10px;">Each combination has 4 governing cases: Max M (corr. N), Max N (corr. M), Min N (corr. M), Min M (corr. N). Leave a row blank to skip it. Sign convention: P<sub>u</sub> positive = compression; M<sub>u</sub> positive bends the section so the <b>top face</b> is in compression (use negative M<sub>u</sub> for the reverse sense).</div>
-      <div id="combosContainer">
+      <div class="section">
+        <h2>Load Combinations</h2>
+        <div class="field">
+          <label>Number of load combinations</label>
+          <select id="numCombos" onchange="generateCombos()">
+            <option value="envelope">Envelope forces only (1 set)</option>
+            <option value="1">1 load combination</option>
+            <option value="2">2 load combinations</option>
+            <option value="3">3 load combinations</option>
+            <option value="4">4 load combinations</option>
+            <option value="5">5 load combinations</option>
+            <option value="6">6 load combinations</option>
+            <option value="8">8 load combinations</option>
+            <option value="10">10 load combinations</option>
+          </select>
+        </div>
+        <div class="note">Each combination has 4 governing cases: Max M (corr. N), Max N (corr. M), Min N (corr. M),
+        Min M (corr. N). Leave a row blank to skip it. Sign convention: P<sub>u</sub> positive = compression;
+        M<sub>u</sub> positive bends the section so the <strong>top face</strong> is in compression (use negative
+        M<sub>u</sub> for the reverse sense).</div>
         <table class="combo-table">
           <thead><tr><th style="width:40%;">Combination / Case</th><th style="width:30%;">P<sub>u</sub> (kN)</th><th style="width:30%;">M<sub>u</sub> (kNm)</th></tr></thead>
           <tbody id="combosBody"></tbody>
         </table>
       </div>
-    </div>
-  </div>
 
-  <button class="btn-primary" onclick="runCalc()">Calculate Interaction Curve &amp; Check Load Cases</button>
-
-  <div id="results" class="hidden">
-
-    <div class="panel" style="margin-top:22px;">
-      <div class="panel-head">4. Section Capacity Summary</div>
-      <div class="panel-body">
-        <div class="summary-grid" id="summaryGrid"></div>
+      <div class="calc-sticky">
+        <button id="runBtn" onclick="runCalc()">Calculate Interaction Curve &amp; Check Load Cases</button>
       </div>
-    </div>
+    </aside>
 
-    <div class="panel">
-      <div class="panel-head">5. P-M Interaction Diagram</div>
-      <div class="panel-body">
-        <div class="chart-wrap" id="chartWrap"></div>
-        <div class="legend">
-          <span><span class="swatch" style="background:#1B4F72;"></span> Capacity curve (+M, top compression)</span>
-          <span><span class="swatch" style="background:#5B8AAE;"></span> Capacity curve (−M, bottom compression)</span>
-          <span><span class="swatch" style="background:#D68910;border-top:2px dashed #D68910;height:0;"></span> P<sub>u,max</sub> cap (Cl 39.3)</span>
-          <span><span class="dot" style="background:#1E7B4D;"></span> Load case — within envelope</span>
-          <span><span class="dot" style="background:#D68910;"></span> Load case — exceeds envelope</span>
+    <div class="col-divider"></div>
+
+    <!-- ============ OUTPUT COLUMN ============ -->
+    <main class="col-output" id="outputCol">
+      <div class="placeholder" id="outputPlaceholder">Enter inputs on the left and click "Calculate Interaction Curve &amp; Check Load Cases" to see the capacity summary, P-M interaction diagram, and load case verification here.</div>
+
+      <div class="results" id="results" style="display:none;">
+        <div class="verdict" id="verdictBox"></div>
+
+        <div class="section">
+          <h2>Section Capacity Summary</h2>
+          <table class="calc"><tbody id="tblSummary"></tbody></table>
+        </div>
+
+        <div class="section">
+          <h2>P-M Interaction Diagram</h2>
+          <div class="chart-wrap" id="chartWrap"></div>
+          <div class="legend">
+            <span><span class="swatch" style="background:#1B4F72;"></span> Capacity curve (+M, top compression)</span>
+            <span><span class="swatch" style="background:#7B9BB3;"></span> Capacity curve (−M, bottom compression)</span>
+            <span><span class="swatch" style="background:#D68910;border-top:2px dashed #D68910;height:0;"></span> P<sub>u,max</sub> cap (Cl 39.3)</span>
+            <span><span class="dot" style="background:#3F7D5C;"></span> Load case — within envelope</span>
+            <span><span class="dot" style="background:#B0413E;"></span> Load case — exceeds envelope</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Verification of Load Combinations</h2>
+          <table class="calc">
+            <thead>
+              <tr>
+                <th style="width:auto;">Load combination / case</th>
+                <th class="val" style="width:auto;">P<sub>u</sub> (kN)</th>
+                <th class="val" style="width:auto;">M<sub>u</sub> applied (kNm)</th>
+                <th class="val" style="width:auto;">x<sub>u</sub> on envelope (mm)</th>
+                <th class="val" style="width:auto;">Combined utilisation</th>
+                <th class="val" style="width:auto;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="verifyBody"></tbody>
+          </table>
         </div>
       </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">6. Verification of Load Combinations</div>
-      <div class="panel-body">
-        <table>
-          <thead>
-            <tr>
-              <th>Load combination / case</th>
-              <th>P<sub>u</sub> (kN)</th>
-              <th>M<sub>u</sub> applied (kNm)</th>
-              <th>x<sub>u</sub> on envelope (mm)</th>
-              <th>Combined P-M utilisation</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="verifyBody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">7. Method &amp; Assumptions</div>
-      <div class="panel-body note">
-        <ul>
-          <li>Strain compatibility per IS 456:2000 Annex E: max. concrete strain 0.0035 at the highly compressed edge when the neutral axis lies within the section (x<sub>u</sub> ≤ D); for x<sub>u</sub> &gt; D the strain profile passes through 0.002 at 3D/7 from the highly compressed edge.</li>
-          <li>Concrete stress block: parabolic-rectangular per Cl 38.1 (design stress 0.447 f<sub>ck</sub>). Concrete tensile strength is neglected.</li>
-          <li>Reinforcement stress-strain: idealised design curve per IS 456 Fig. 23 for HYSD bars (Fe 415/500/500D/550); elastic-perfectly-plastic at 0.87f<sub>y</sub> for Fe 250. Displaced concrete area at compression bar locations is deducted.</li>
-          <li>Curve generated by sweeping the neutral axis depth x<sub>u</sub> from a shallow depth (tension-controlled) through x<sub>u</sub> → ∞ (pure axial compression), separately for bending in the +M and −M sense (relevant when top/bottom reinforcement differs). Axial capacity is capped at P<sub>u,max</sub> = 0.4 f<sub>ck</sub> A<sub>c</sub> + 0.67 f<sub>y</sub> A<sub>sc</sub> per Cl 39.3.</li>
-          <li><b>Combined P-M utilisation</b> is computed radially: for each applied (P<sub>u</sub>, M<sub>u</sub>) point, both P and M are scaled together along the same ratio until the pair lands exactly on the capacity envelope. Utilisation = applied / scaled-capacity. This reflects the true combined effect of axial load and moment acting together, rather than checking moment capacity alone at the applied P<sub>u</sub>.</li>
-          <li><b>Not covered by this tool</b> — verify separately: minimum eccentricity per Cl 25.4 (e<sub>min</sub> = unsupported length/500 + D/30, ≥ 20 mm); biaxial bending interaction per Cl 39.6; slenderness / additional moments for slender columns per Cl 39.7; shear, confinement and detailing (Cl 26, IS 13920 for ductile detailing); and section shapes other than rectangular.</li>
-          <li>This is a uniaxial P-M check about the axis defined by D only. For a real column, both principal directions should be checked.</li>
-        </ul>
-      </div>
-    </div>
-
+    </main>
   </div>
 
+  <footer class="disclaimer">
+    tool-mn-curve.html · Civil / Tunnel Tools Suite · IS 456:2000 — Annex E &amp; Cl. 39
+    <div class="no-print" style="margin-top:4px;">© Vishal Bansal</div>
+  </footer>
 </div>
-
-<footer class="disclaimer">
-  <b>Disclaimer:</b> This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction. This is not a substitute for professional judgment or compliance verification against the applicable project-specific code requirements.
-</footer>
 
 <script>
 const Es = 200000;
 const CASE_LABELS = ['Max M, corr. N','Max N, corr. M','Min N, corr. M','Min M, corr. N'];
 
-function toggleLayer(prefix){
-  const en = document.getElementById(prefix+'en').checked;
-  const box = document.getElementById(prefix+'box');
-  box.classList.toggle('disabled', !en);
-  ['dia','n','cov'].forEach(f=>{
-    document.getElementById(prefix+f).disabled = !en;
-  });
-  updateSketch();
+function val(id){ return parseFloat(document.getElementById(id).value)||0; }
+function chk(id){ return document.getElementById(id).checked; }
+function fmt(n, d){ if (n===null||n===undefined||isNaN(n)) return '—'; return n.toFixed(d===undefined?1:d); }
+
+function printSheet(){
+  const results = document.getElementById('results');
+  if(results.style.display==='none'){
+    alert('Run the calculation first so the outputs have something to print.');
+    return;
+  }
+  const methodEl = document.querySelector('details.method');
+  const wasOpen = methodEl.open;
+  methodEl.open = true;
+  window.print();
+  setTimeout(()=>{ methodEl.open = wasOpen; }, 300);
 }
 
-function val(id){ return parseFloat(document.getElementById(id).value)||0; }
-
-function updateSketch(){
-  const b = val('b'), D = val('D');
-  if (!b || !D){ document.getElementById('sectionSketch').innerHTML=''; return; }
-  const top = [
-    {dia:val('t1dia'), n:val('t1n'), cov:val('t1cov'), layer:1},
-    {dia:val('t2dia'), n:val('t2n'), cov:val('t2cov'), layer:2, en:document.getElementById('t2en').checked}
-  ].filter(l=>l.n>0 && l.dia>0 && (l.layer===1 || l.en));
-  const bottom = [
-    {dia:val('b1dia'), n:val('b1n'), cov:val('b1cov'), layer:1},
-    {dia:val('b2dia'), n:val('b2n'), cov:val('b2cov'), layer:2, en:document.getElementById('b2en').checked}
-  ].filter(l=>l.n>0 && l.dia>0 && (l.layer===1 || l.en));
-
-  const VBW=460, VBH=380, margin=64;
-  const availW = VBW-2*margin, availH = VBH-2*margin-20;
-  const scale = Math.min(availW/b, availH/D);
-  const rectW = b*scale, rectH = D*scale;
-  const ox = (VBW-rectW)/2, oy = margin;
-
-  let svg = '<svg viewBox="0 0 '+VBW+' '+VBH+'" width="100%" style="max-width:420px;font-family:Roboto Mono,monospace;font-size:11px;">';
-  // concrete outline
-  svg += '<rect x="'+ox.toFixed(1)+'" y="'+oy.toFixed(1)+'" width="'+rectW.toFixed(1)+'" height="'+rectH.toFixed(1)+'" fill="#EAF1F6" stroke="#1B4F72" stroke-width="2"/>';
-
-  function drawLayerRow(layers, faceTop){
-    layers.forEach(layer=>{
-      const yMm = faceTop ? layer.cov : (D-layer.cov);
-      const ySvg = oy + yMm*scale;
-      const r = Math.max(layer.dia*scale/2, 2.6);
-      const inset = Math.min(Math.max(layer.cov*scale, r+4), rectW/2-4);
-      const n = layer.n;
-      for (let i=0;i<n;i++){
-        const xSvg = n===1 ? ox+rectW/2 : ox+inset + i*(rectW-2*inset)/(n-1);
-        const solid = layer.layer===1;
-        svg += '<circle cx="'+xSvg.toFixed(1)+'" cy="'+ySvg.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+(solid?'#1B4F72':'#fff')+'" stroke="#1B4F72" stroke-width="1.4"/>';
-      }
-      const lbl = layer.n+'-\u00D8'+layer.dia+' @ '+layer.cov+'mm cov';
-      const labelY = faceTop ? ySvg-r-6 : ySvg+r+13;
-      svg += '<text x="'+(ox+rectW+8)+'" y="'+(faceTop? oy+ (layer.layer===1?18:34) : oy+rectH- (layer.layer===1?6:22) )+'" fill="#5B7182" font-size="10.5">'+(faceTop?'T':'B')+layer.layer+': '+lbl+'</text>';
-    });
-  }
-  drawLayerRow(top, true);
-  drawLayerRow(bottom, false);
-
-  // dimension line for b (below section)
-  const dimY = oy+rectH+28;
-  svg += '<line x1="'+ox+'" y1="'+dimY+'" x2="'+(ox+rectW)+'" y2="'+dimY+'" stroke="#8598a6" stroke-width="1"/>';
-  svg += '<line x1="'+ox+'" y1="'+(dimY-5)+'" x2="'+ox+'" y2="'+(dimY+5)+'" stroke="#8598a6"/>';
-  svg += '<line x1="'+(ox+rectW)+'" y1="'+(dimY-5)+'" x2="'+(ox+rectW)+'" y2="'+(dimY+5)+'" stroke="#8598a6"/>';
-  svg += '<text x="'+(ox+rectW/2)+'" y="'+(dimY+16)+'" text-anchor="middle" fill="#5B7182">b = '+b+' mm</text>';
-
-  // dimension line for D (left of section)
-  const dimX = ox-26;
-  svg += '<line x1="'+dimX+'" y1="'+oy+'" x2="'+dimX+'" y2="'+(oy+rectH)+'" stroke="#8598a6" stroke-width="1"/>';
-  svg += '<line x1="'+(dimX-5)+'" y1="'+oy+'" x2="'+(dimX+5)+'" y2="'+oy+'" stroke="#8598a6"/>';
-  svg += '<line x1="'+(dimX-5)+'" y1="'+(oy+rectH)+'" x2="'+(dimX+5)+'" y2="'+(oy+rectH)+'" stroke="#8598a6"/>';
-  svg += '<text x="'+(dimX-8)+'" y="'+(oy+rectH/2)+'" text-anchor="middle" fill="#5B7182" transform="rotate(-90,'+(dimX-8)+','+(oy+rectH/2)+')">D = '+D+' mm</text>';
-
-  svg += '<text x="'+(ox+rectW/2)+'" y="'+(oy-10)+'" text-anchor="middle" fill="#1B4F72" font-weight="700">TOP</text>';
-  svg += '<text x="'+(ox+rectW/2)+'" y="'+(oy+rectH+50)+'" text-anchor="middle" fill="#1B4F72" font-weight="700">BOTTOM</text>';
-
-  svg += '</svg>';
-  document.getElementById('sectionSketch').innerHTML = svg +
-    '<div class="sketch-legend"><span><span class="bar-dot solid"></span> Layer 1</span><span><span class="bar-dot hollow"></span> Layer 2</span></div>';
+function toggleLayer(prefix){
+  updateSketch();
 }
 
 function generateCombos(){
@@ -562,7 +558,6 @@ function generateCombos(){
   }
 }
 generateCombos();
-updateSketch();
 
 function steelStress(strainAbs, fy){
   if (strainAbs <= 0) return 0;
@@ -683,37 +678,92 @@ function findUtilization(branch, Pd, Md){
   return {utilization: 1/best.t, xu: best.xu};
 }
 
-function fmt(n, d){ if (n===null||n===undefined||isNaN(n)) return '—'; return n.toFixed(d===undefined?1:d); }
-
 function getFy(){
   const v = document.getElementById('fy').value;
   return v==='500d' ? 500 : parseFloat(v);
 }
 
 function collectLayers(D){
-  const t1 = {As: barArea(parseFloat(document.getElementById('t1dia').value)||0, parseFloat(document.getElementById('t1n').value)||0), yFromTop: parseFloat(document.getElementById('t1cov').value)||0};
-  const b1c = parseFloat(document.getElementById('b1cov').value)||0;
-  const b1 = {As: barArea(parseFloat(document.getElementById('b1dia').value)||0, parseFloat(document.getElementById('b1n').value)||0), yFromTop: D-b1c};
-  const layers = [t1,b1];
-  if (document.getElementById('t2en').checked){
-    layers.push({As: barArea(parseFloat(document.getElementById('t2dia').value)||0, parseFloat(document.getElementById('t2n').value)||0), yFromTop: parseFloat(document.getElementById('t2cov').value)||0});
-  }
-  if (document.getElementById('b2en').checked){
-    const b2c = parseFloat(document.getElementById('b2cov').value)||0;
-    layers.push({As: barArea(parseFloat(document.getElementById('b2dia').value)||0, parseFloat(document.getElementById('b2n').value)||0), yFromTop: D-b2c});
-  }
+  const layers = [
+    {As: barArea(val('t1dia'), val('t1n')), yFromTop: val('t1cov')},
+    {As: barArea(val('b1dia'), val('b1n')), yFromTop: D - val('b1cov')}
+  ];
+  if (chk('t2en')) layers.push({As: barArea(val('t2dia'), val('t2n')), yFromTop: val('t2cov')});
+  if (chk('b2en')) layers.push({As: barArea(val('b2dia'), val('b2n')), yFromTop: D - val('b2cov')});
   return layers.filter(l=>l.As>0);
 }
 
-function stat(label, val, sub, highlight){
-  return '<div class="stat'+(highlight?' highlight':'')+'"><div class="stat-label">'+label+'</div><div class="stat-val">'+val+'</div><div class="stat-sub">'+sub+'</div></div>';
+function updateSketch(){
+  const b = val('b'), D = val('D');
+  if (!b || !D){ document.getElementById('sectionSketch').innerHTML=''; return; }
+  const top = [
+    {dia:val('t1dia'), n:val('t1n'), cov:val('t1cov'), layer:1},
+    {dia:val('t2dia'), n:val('t2n'), cov:val('t2cov'), layer:2, en:chk('t2en')}
+  ].filter(l=>l.n>0 && l.dia>0 && (l.layer===1 || l.en));
+  const bottom = [
+    {dia:val('b1dia'), n:val('b1n'), cov:val('b1cov'), layer:1},
+    {dia:val('b2dia'), n:val('b2n'), cov:val('b2cov'), layer:2, en:chk('b2en')}
+  ].filter(l=>l.n>0 && l.dia>0 && (l.layer===1 || l.en));
+
+  const VBW=420, VBH=380, margin=64;
+  const availW = VBW-2*margin, availH = VBH-2*margin-20;
+  const scale = Math.min(availW/b, availH/D);
+  const rectW = b*scale, rectH = D*scale;
+  const ox = (VBW-rectW)/2, oy = margin;
+
+  let svg = '<svg viewBox="0 0 '+VBW+' '+VBH+'" width="100%" style="max-width:400px;font-family:var(--mono);font-size:11px;">';
+  svg += '<rect x="'+ox.toFixed(1)+'" y="'+oy.toFixed(1)+'" width="'+rectW.toFixed(1)+'" height="'+rectH.toFixed(1)+'" fill="#fff" stroke="#3D5A73" stroke-width="2"/>';
+
+  function drawLayerRow(layers, faceTop){
+    layers.forEach(layer=>{
+      const yMm = faceTop ? layer.cov : (D-layer.cov);
+      const ySvg = oy + yMm*scale;
+      const r = Math.max(layer.dia*scale/2, 2.6);
+      const inset = Math.min(Math.max(layer.cov*scale, r+4), rectW/2-4);
+      const n = layer.n;
+      for (let i=0;i<n;i++){
+        const xSvg = n===1 ? ox+rectW/2 : ox+inset + i*(rectW-2*inset)/(n-1);
+        const solid = layer.layer===1;
+        svg += '<circle cx="'+xSvg.toFixed(1)+'" cy="'+ySvg.toFixed(1)+'" r="'+r.toFixed(1)+'" fill="'+(solid?'#3D5A73':'#fff')+'" stroke="#3D5A73" stroke-width="1.4"/>';
+      }
+      const lbl = layer.n+'-\u00D8'+layer.dia+' @ '+layer.cov+'mm cov';
+      svg += '<text x="'+(ox+rectW+8)+'" y="'+(faceTop? oy+ (layer.layer===1?18:34) : oy+rectH- (layer.layer===1?6:22) )+'" fill="#5B6B76" font-size="10.5">'+(faceTop?'T':'B')+layer.layer+': '+lbl+'</text>';
+    });
+  }
+  drawLayerRow(top, true);
+  drawLayerRow(bottom, false);
+
+  const dimY = oy+rectH+28;
+  svg += '<line x1="'+ox+'" y1="'+dimY+'" x2="'+(ox+rectW)+'" y2="'+dimY+'" stroke="#5B6B76" stroke-width="1"/>';
+  svg += '<line x1="'+ox+'" y1="'+(dimY-5)+'" x2="'+ox+'" y2="'+(dimY+5)+'" stroke="#5B6B76"/>';
+  svg += '<line x1="'+(ox+rectW)+'" y1="'+(dimY-5)+'" x2="'+(ox+rectW)+'" y2="'+(dimY+5)+'" stroke="#5B6B76"/>';
+  svg += '<text x="'+(ox+rectW/2)+'" y="'+(dimY+16)+'" text-anchor="middle" fill="#5B6B76">b = '+b+' mm</text>';
+
+  const dimX = ox-26;
+  svg += '<line x1="'+dimX+'" y1="'+oy+'" x2="'+dimX+'" y2="'+(oy+rectH)+'" stroke="#5B6B76" stroke-width="1"/>';
+  svg += '<line x1="'+(dimX-5)+'" y1="'+oy+'" x2="'+(dimX+5)+'" y2="'+oy+'" stroke="#5B6B76"/>';
+  svg += '<line x1="'+(dimX-5)+'" y1="'+(oy+rectH)+'" x2="'+(dimX+5)+'" y2="'+(oy+rectH)+'" stroke="#5B6B76"/>';
+  svg += '<text x="'+(dimX-8)+'" y="'+(oy+rectH/2)+'" text-anchor="middle" fill="#5B6B76" transform="rotate(-90,'+(dimX-8)+','+(oy+rectH/2)+')">D = '+D+' mm</text>';
+
+  svg += '<text x="'+(ox+rectW/2)+'" y="'+(oy-10)+'" text-anchor="middle" fill="#3D5A73" font-weight="700">TOP</text>';
+  svg += '<text x="'+(ox+rectW/2)+'" y="'+(oy+rectH+50)+'" text-anchor="middle" fill="#3D5A73" font-weight="700">BOTTOM</text>';
+
+  svg += '</svg>';
+  document.getElementById('sectionSketch').innerHTML = svg +
+    '<div class="sketch-legend"><span><span class="bar-dot solid"></span> Layer 1</span><span><span class="bar-dot hollow"></span> Layer 2</span></div>';
+}
+generateCombos();
+updateSketch();
+
+function stat(label, val){
+  return '<tr><th>'+label+'</th><td class="val">'+val+'</td></tr>';
 }
 
-let LAST = null; // cache for chart re-draw
+let LAST = null;
 
 function runCalc(){
-  const b = parseFloat(document.getElementById('b').value);
-  const D = parseFloat(document.getElementById('D').value);
+  const b = val('b');
+  const D = val('D');
   const fck = parseFloat(document.getElementById('fck').value);
   const fy = getFy();
 
@@ -739,7 +789,7 @@ function runCalc(){
 
   const steelPct = (100*Asc/(b*D));
   document.getElementById('steelSummary').innerHTML =
-    'Total reinforcement area A<sub>sc</sub> = '+fmt(Asc,0)+' mm² &nbsp;(p = '+fmt(steelPct,2)+'% of gross area). Layers used: '+allLayers.length+'.';
+    'Total reinforcement area A<sub>sc</sub> = '+fmt(Asc,0)+' mm² (p = '+fmt(steelPct,2)+'% of gross area). Layers used: '+allLayers.length+'.';
 
   // gather all combos/cases from the consolidated table
   const combos = [];
@@ -764,7 +814,6 @@ function runCalc(){
 
   if (combos.length===0){ alert('Enter at least one load case (Pu and Mu) in a load combination.'); return; }
 
-  // compute utilisation for every case
   let governing = null;
   combos.forEach(combo=>{
     combo.cases.forEach(c=>{
@@ -780,15 +829,26 @@ function runCalc(){
     });
   });
 
-  const summary = document.getElementById('summaryGrid');
-  summary.innerHTML =
-    stat('P_{u,max} (Cl 39.3)', fmt(PuMaxCode,0)+' kN', 'Pure axial capacity cap') +
-    stat('M_u at P_u = 0 (+M)', fmt(muAtPu0_A.Mu,1)+' kNm', 'Pure bending, top in tension') +
-    stat('M_u at P_u = 0 (−M)', fmt(-muAtPu0_B.Mu,1)+' kNm', 'Pure bending, bottom in tension') +
-    stat('Governing utilisation', (isFinite(governing.u)?fmt(100*governing.u,0)+'%':'> 100%'), governing.label, true);
+  const tblSummary = document.getElementById('tblSummary');
+  tblSummary.innerHTML =
+    stat('b × D', fmt(b,0)+' × '+fmt(D,0)+' mm') +
+    stat('f_{ck} / f_y', fck+' N/mm² / '+fy+' N/mm²') +
+    stat('Total reinforcement, A_{sc}', fmt(Asc,0)+' mm² (p = '+fmt(steelPct,2)+'%)') +
+    stat('P_{u,max} (Cl 39.3)', fmt(PuMaxCode,0)+' kN') +
+    stat('M_u at P_u = 0 (+M, top in tension)', fmt(muAtPu0_A.Mu,1)+' kNm') +
+    stat('M_u at P_u = 0 (−M, bottom in tension)', fmt(-muAtPu0_B.Mu,1)+' kNm') +
+    stat('Balanced point (≈)', fmt(balanced.Pu,0)+' kN / '+fmt(balanced.Mu,1)+' kNm  (x_u ≈ '+fmt(balanced.xu,0)+' mm)');
 
   LAST = {branchAc, branchBc, PuMaxCode, combos};
   drawChart(LAST);
+
+  const overallPass = isFinite(governing.u) && governing.u<=1+1e-6;
+  const verdictBox = document.getElementById('verdictBox');
+  verdictBox.className = 'verdict ' + (overallPass?'pass':'fail');
+  verdictBox.innerHTML =
+    '<span class="badge">'+(overallPass?'WITHIN LIMIT':'FAILS CHECK')+'</span> '+
+    'Governing combined P-M utilisation = '+(isFinite(governing.u)?fmt(100*governing.u,0)+'%':'&gt; 100%')+
+    '<span class="sub">Governing case: '+governing.label+' (Pu = '+fmt(governing.Pu,0)+' kN, Mu = '+fmt(governing.Mu,1)+' kNm)</span>';
 
   const vbody = document.getElementById('verifyBody');
   vbody.innerHTML = '';
@@ -804,23 +864,24 @@ function runCalc(){
       const row = document.createElement('tr');
       if (isGov) row.className='governing';
       row.innerHTML =
-        '<td class="txt">&nbsp;&nbsp;'+c.label+'</td>'+
-        '<td>'+fmt(c.Pu,0)+'</td>'+
-        '<td>'+fmt(c.Mu,1)+'</td>'+
-        '<td>'+(c.xu!==null&&c.xu!==undefined?fmt(c.xu,0):'—')+'</td>'+
-        '<td>'+utilTxt+'</td>'+
-        '<td><span class="flag '+status+'">'+(status==='pass'?'WITHIN LIMIT':'FAILS CHECK')+'</span></td>';
+        '<td>'+c.label+'</td>'+
+        '<td class="val">'+fmt(c.Pu,0)+'</td>'+
+        '<td class="val">'+fmt(c.Mu,1)+'</td>'+
+        '<td class="val">'+(c.xu!==null&&c.xu!==undefined?fmt(c.xu,0):'—')+'</td>'+
+        '<td class="val">'+utilTxt+'</td>'+
+        '<td class="val chip-cell"><span class="chip '+status+'">'+(status==='pass'?'OK':'EXCEEDS')+'</span></td>';
       vbody.appendChild(row);
     });
   });
 
-  document.getElementById('results').classList.remove('hidden');
+  document.getElementById('results').style.display='block';
+  document.getElementById('outputPlaceholder').style.display='none';
   document.getElementById('results').scrollIntoView({behavior:'smooth'});
 }
 
 function drawChart(data){
   const {branchAc:branchA, branchBc:branchB, PuMaxCode:PuMax, combos} = data;
-  const W = 760, H = 460, pad = {l:70,r:30,t:20,b:50};
+  const W = 740, H = 440, pad = {l:70,r:30,t:20,b:50};
   const allM = branchA.map(p=>p.Mu).concat(branchB.map(p=>p.Mu));
   const allP = branchA.map(p=>p.Pu).concat(branchB.map(p=>p.Pu));
   let mMax = Math.max(...allM.map(Math.abs))*1.15;
@@ -834,24 +895,23 @@ function drawChart(data){
     return branch.map((p,i)=> (i===0?'M':'L')+x(p.Mu).toFixed(1)+','+y(p.Pu).toFixed(1)).join(' ');
   }
 
-  let svg = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:'+W+'px;font-family:Roboto Mono,monospace;font-size:10.5px;">';
-  // dotted gridlines (drawn first, behind everything)
+  let svg = '<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="max-width:'+W+'px;font-family:var(--mono);font-size:10.5px;">';
   for (let i=-4;i<=4;i++){
     const mv = i*mMax/4;
-    svg += '<line x1="'+x(mv).toFixed(1)+'" y1="'+pad.t+'" x2="'+x(mv).toFixed(1)+'" y2="'+(H-pad.b)+'" stroke="#D7E0E7" stroke-width="1" stroke-dasharray="1.5,3.5"/>';
+    svg += '<line x1="'+x(mv).toFixed(1)+'" y1="'+pad.t+'" x2="'+x(mv).toFixed(1)+'" y2="'+(H-pad.b)+'" stroke="#DAD5CB" stroke-width="1" stroke-dasharray="1.5,3.5"/>';
   }
   for (let i=0;i<=4;i++){
     const pv = pMin + i*(pMax-pMin)/4;
-    svg += '<line x1="'+pad.l+'" y1="'+y(pv).toFixed(1)+'" x2="'+(W-pad.r)+'" y2="'+y(pv).toFixed(1)+'" stroke="#D7E0E7" stroke-width="1" stroke-dasharray="1.5,3.5"/>';
+    svg += '<line x1="'+pad.l+'" y1="'+y(pv).toFixed(1)+'" x2="'+(W-pad.r)+'" y2="'+y(pv).toFixed(1)+'" stroke="#DAD5CB" stroke-width="1" stroke-dasharray="1.5,3.5"/>';
   }
-  svg += '<line x1="'+pad.l+'" y1="'+y(0)+'" x2="'+(W-pad.r)+'" y2="'+y(0)+'" stroke="#C9D6E0"/>';
-  svg += '<line x1="'+x(0)+'" y1="'+pad.t+'" x2="'+x(0)+'" y2="'+(H-pad.b)+'" stroke="#C9D6E0"/>';
+  svg += '<line x1="'+pad.l+'" y1="'+y(0)+'" x2="'+(W-pad.r)+'" y2="'+y(0)+'" stroke="#9AAAB5"/>';
+  svg += '<line x1="'+x(0)+'" y1="'+pad.t+'" x2="'+x(0)+'" y2="'+(H-pad.b)+'" stroke="#9AAAB5"/>';
   svg += '<line x1="'+pad.l+'" y1="'+y(PuMax).toFixed(1)+'" x2="'+(W-pad.r)+'" y2="'+y(PuMax).toFixed(1)+'" stroke="#D68910" stroke-width="1.5" stroke-dasharray="5,4"/>';
   svg += '<text x="'+(W-pad.r)+'" y="'+(y(PuMax)-5)+'" text-anchor="end" fill="#D68910">Pu,max</text>';
   svg += '<path d="'+pathFor(branchA)+'" fill="none" stroke="#1B4F72" stroke-width="2.2"/>';
-  svg += '<path d="'+pathFor(branchB)+'" fill="none" stroke="#5B8AAE" stroke-width="2.2"/>';
-  svg += '<text x="'+(W/2)+'" y="'+(H-14)+'" text-anchor="middle" fill="#5B7182">Mu (kNm)</text>';
-  svg += '<text x="18" y="'+(H/2)+'" text-anchor="middle" fill="#5B7182" transform="rotate(-90,18,'+(H/2)+')">Pu (kN)</text>';
+  svg += '<path d="'+pathFor(branchB)+'" fill="none" stroke="#7B9BB3" stroke-width="2.2"/>';
+  svg += '<text x="'+(W/2)+'" y="'+(H-14)+'" text-anchor="middle" fill="#5B6B76">Mu (kNm)</text>';
+  svg += '<text x="18" y="'+(H/2)+'" text-anchor="middle" fill="#5B6B76" transform="rotate(-90,18,'+(H/2)+')">Pu (kN)</text>';
   for (let i=-4;i<=4;i++){
     const mv = i*mMax/4;
     svg += '<text x="'+x(mv).toFixed(1)+'" y="'+(y(0)+16)+'" text-anchor="middle" fill="#8598a6">'+fmt(mv,0)+'</text>';
@@ -864,7 +924,7 @@ function drawChart(data){
   combos.forEach(combo=>{
     combo.cases.forEach(c=>{
       const safe = !c.exceeds && c.util<=1+1e-6;
-      const col = safe ? '#1E7B4D' : '#D68910';
+      const col = safe ? '#3F7D5C' : '#B0413E';
       const cx = x(c.Mu), cy = y(c.Pu);
       svg += '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="5" fill="'+col+'" stroke="#fff" stroke-width="1.3"/>';
     });
@@ -874,6 +934,5 @@ function drawChart(data){
   document.getElementById('chartWrap').innerHTML = svg;
 }
 </script>
-
 </body>
 </html>
