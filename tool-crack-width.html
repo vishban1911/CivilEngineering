@@ -55,6 +55,40 @@ header.titleblock .code-tag{
   white-space:nowrap;
   height:fit-content;
 }
+button.btn-print{
+  font-family:var(--sans);
+  font-size:12.5px;
+  font-weight:600;
+  color:var(--output-accent);
+  background:#fff;
+  border:1.5px solid var(--output-accent);
+  border-radius:3px;
+  padding:7px 12px;
+  cursor:pointer;
+  height:fit-content;
+}
+button.btn-print:hover{background:var(--output-bg);}
+
+/* ---------- print / PDF export ---------- */
+@media print{
+  .no-print{display:none !important;}
+  body{background:#fff;}
+  .worksheet{display:block;}
+  .col-input, .col-output{
+    width:100% !important;
+    max-height:none !important;
+    overflow:visible !important;
+    position:static !important;
+    background:#fff !important;
+  }
+  .col-divider{display:none;}
+  .calc-sticky{position:static;padding:10px 0;}
+  .placeholder{display:none;}
+  .sketchRow{flex-direction:column;}
+  .sketchCol{max-width:420px;}
+  details.method .body{display:block;}
+  .section, .sketchRow{page-break-inside:avoid;}
+}
 header.titleblock .headerDisclaimer{
   flex-basis:100%;
   font-size:11px;
@@ -92,6 +126,14 @@ header.titleblock .headerDisclaimer strong{color:var(--ink);}
 
 /* ---------- section blocks (no heavy boxed panels) ---------- */
 .section{margin-bottom:20px;}
+.sketchRow{display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap;margin-bottom:20px;}
+.sketchCol{flex:1 1 360px;max-width:400px;}
+.sectionMatCol{flex:1 1 300px;min-width:280px;}
+.sketchRow h2{
+  margin:0 0 10px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;
+  padding-bottom:6px;border-bottom:1px solid var(--border);color:var(--output-accent);
+}
+@media(max-width:640px){.sketchRow{flex-direction:column;}.sketchCol{max-width:none;}}
 .section h2{
   margin:0 0 10px;
   font-size:12px;
@@ -265,6 +307,7 @@ footer.disclaimer{
       <div class="subtitle">Rectangular RC section · multi-layer reinforcement · service (working) loads</div>
     </div>
     <span class="code-tag">IS 456:2000 — Annex F</span>
+    <button class="btn-print no-print" onclick="printSheet()" type="button">🖨 Print / Save as PDF</button>
     <div class="headerDisclaimer"><strong>Disclaimer:</strong> This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction. This is not a substitute for professional judgment or compliance verification against the applicable project-specific code requirements.</div>
   </header>
 
@@ -400,18 +443,21 @@ footer.disclaimer{
       <div class="results" id="results" style="display:none;">
         <div class="verdict" id="verdictBox"></div>
 
-        <div class="section">
-          <h2>Sketch — Section, Loads &amp; Neutral Axis</h2>
-          <div id="sketchWrap" style="text-align:center;"></div>
+        <div class="sketchRow">
+          <div class="sectionMatCol">
+            <h2>Section &amp; Material</h2>
+            <table class="calc">
+              <tbody id="tblSection"></tbody>
+            </table>
+          </div>
+          <div class="sketchCol">
+            <h2>Sketch — Section, Loads &amp; Neutral Axis</h2>
+            <div id="sketchWrap" style="text-align:center;"></div>
+          </div>
         </div>
 
         <div class="section">
           <h2>Calculation</h2>
-          <table class="calc">
-            <caption>Section &amp; material</caption>
-            <tbody id="tblSection"></tbody>
-          </table>
-          <hr class="divider">
           <table class="calc">
             <caption>Cracked-section equilibrium (P, M applied)</caption>
             <tbody id="tblEquilibrium"></tbody>
@@ -435,7 +481,10 @@ footer.disclaimer{
     </main>
   </div>
 
-  <footer class="disclaimer">tool-crack-width.html · Civil / Tunnel Tools Suite · IS 456:2000 Annex F</footer>
+  <footer class="disclaimer">
+    tool-crack-width.html · Civil / Tunnel Tools Suite · IS 456:2000 Annex F
+    <div class="no-print" style="margin-top:4px;">© Vishal Bansal</div>
+  </footer>
 </div>
 
 <script>
@@ -449,6 +498,19 @@ steelGradeSel.addEventListener('change', ()=>{
 });
 
 function num(id){ return parseFloat(document.getElementById(id).value); }
+
+function printSheet(){
+  const results = document.getElementById('results');
+  if(results.style.display==='none'){
+    alert('Run the crack width check first so the outputs have something to print.');
+    return;
+  }
+  const methodEl = document.querySelector('details.method');
+  const wasOpen = methodEl.open;
+  methodEl.open = true;
+  window.print();
+  setTimeout(()=>{ methodEl.open = wasOpen; }, 300);
+}
 function chk(id){ return document.getElementById(id).checked; }
 
 // IS 456 Table 21 — permissible concrete compressive stress in bending, σcbc (N/mm²), by fck
@@ -778,7 +840,7 @@ function drawSketch(p){
     return g;
   }
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:640px;width:100%;font-family:var(--sans);">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="max-width:380px;width:100%;font-family:var(--sans);">`;
   svg += `<rect x="${x0}" y="${y0}" width="${drawW}" height="${drawH}" fill="#FBFCFD" stroke="#1B4F72" stroke-width="2.2"/>`;
   svg += `<line x1="${x0}" y1="${y0}" x2="${x0+drawW}" y2="${y0}" stroke="#1B4F72" stroke-width="2.2"/>`;
 
@@ -843,8 +905,7 @@ function drawSketch(p){
     </defs>
   </svg>`);
 
-  document.getElementById('sketchWrap').innerHTML = svg +
-    `<div class="note" style="text-align:left;margin-top:10px;">Section drawn schematically (fixed illustrative width and bar inset — not to true b:scale for per-metre strips). Grey dots = distribution steel (excluded from the M–N and crack-width calc); blue dots = tension/structural-compression reinforcement.</div>`;
+  document.getElementById('sketchWrap').innerHTML = svg;
 }
 </script>
 </body>
