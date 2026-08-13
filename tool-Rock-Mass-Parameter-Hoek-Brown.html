@@ -8,16 +8,18 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #F7F9FB;
-    --blue: #1B4F72;
-    --blue-light: #2E6DA4;
-    --blue-pale: #E7EEF3;
-    --amber: #D68910;
+    /* ---- Project palette (Technical/Blueprint v2) ---- */
+    --input-bg: #FAF8F5;
+    --input-accent: #3D5A73;
+    --output-bg: #F0F4F7;
+    --output-accent: #1B4F72;
+    --amber: #D68910;      /* warning */
+    --red: #B0413E;        /* fail / exceeds limit */
+    --green: #3F7D5C;      /* pass / OK */
+    --divider: #D5D0C8;
     --amber-pale: #FBF0DC;
-    --green: #1E7B4D;
-    --green-pale: #E4F3EA;
-    --line: #B9C6D1;
-    --grid: rgba(27,79,114,0.07);
+    --red-pale: #F7E4E2;
+    --green-pale: #E4F0EA;
     --text: #1C2733;
     --text-mute: #5A6B7A;
     --sans: 'Inter', -apple-system, Segoe UI, Roboto, sans-serif;
@@ -26,23 +28,17 @@
   *{ box-sizing: border-box; }
   html,body{ margin:0; padding:0; }
   body{
-    background-color: var(--bg);
-    background-image:
-      linear-gradient(var(--grid) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size: 24px 24px;
+    background: #fff;
     font-family: var(--sans);
     color: var(--text);
     line-height: 1.5;
-    padding: 24px;
   }
-  .sheet{ max-width: 1320px; margin: 0 auto; }
+  .sheet{ max-width: 1320px; margin: 0 auto; padding: 0 0 24px; }
 
+  /* ============ HEADER BAR (title + code ref + disclaimer) ============ */
   header.titleblock{
-    background: var(--blue);
+    background: var(--output-accent);
     color: #fff;
-    border: 2px solid var(--blue);
-    border-radius: 4px 4px 0 0;
     padding: 18px 24px;
     display: flex;
     justify-content: space-between;
@@ -62,35 +58,69 @@
     text-align: right;
     line-height: 1.4;
   }
-
-  main{
-    background: #fff;
-    border: 2px solid var(--blue);
-    border-top: none;
-    border-radius: 0 0 4px 4px;
-    padding: 20px;
-  }
-
-  /* ---- Two column layout: inputs left, outputs right ---- */
-  .layout{ display:grid; grid-template-columns: 420px 1fr; gap: 20px; align-items:start; }
-  @media (max-width: 980px){ .layout{ grid-template-columns: 1fr; } }
-  .col-input, .col-output{ display:flex; flex-direction:column; gap:20px; }
-
-  .panel{
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    background: #fff;
-    overflow: hidden;
-  }
-  .panel > .panel-head{
-    background: var(--blue-pale);
-    border-bottom: 1px solid var(--line);
-    padding: 8px 14px;
+  .toolbar-actions{ display:flex; gap:8px; flex-wrap:wrap; }
+  button.print-btn{
+    background: rgba(255,255,255,0.14);
+    color:#fff;
+    border: 1px solid rgba(255,255,255,0.5);
+    padding: 7px 12px;
+    border-radius: 3px;
+    font-size: 0.8rem;
     font-weight: 600;
-    font-size: 0.92rem;
-    color: var(--blue);
+    cursor: pointer;
   }
-  .panel > .panel-body{ padding: 16px; }
+  button.print-btn:hover{ background: rgba(255,255,255,0.24); }
+
+  .disclaimer-bar{
+    background: var(--amber-pale);
+    border-bottom: 2px solid var(--amber);
+    color: #7A4E09;
+    font-size: 0.78rem;
+    padding: 9px 24px;
+  }
+  .disclaimer-bar b{ color:#5A3A06; }
+
+  /* ============ TWO-COLUMN LAYOUT ============ */
+  .layout{
+    display: grid;
+    grid-template-columns: minmax(300px, 38%) 1px 1fr;
+    gap: 0;
+    padding: 20px 24px;
+  }
+  @media (max-width: 980px){
+    .layout{ grid-template-columns: 1fr; }
+    .col-divider{ display:none; }
+  }
+  .col-divider{ background: var(--divider); width:1px; }
+
+  .col-input{
+    background: var(--input-bg);
+    padding: 18px 20px;
+  }
+  @media (min-width: 981px){
+    .col-input{
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      position: sticky;
+      top: 20px;
+      align-self: start;
+    }
+  }
+  .col-output{
+    background: var(--output-bg);
+    padding: 18px 24px;
+    display:flex; flex-direction:column; gap: 22px;
+  }
+
+  h2.col-title{
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--input-accent);
+    margin: 0 0 14px;
+  }
+  .col-output h2.col-title{ color: var(--output-accent); }
 
   label{ display:block; font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; color: var(--text); }
   .hint{ font-size: 0.76rem; color: var(--text-mute); margin: 2px 0 10px; }
@@ -99,47 +129,45 @@
     font-family: var(--mono);
     font-size: 0.92rem;
     padding: 7px 9px;
-    border: 1px solid var(--line);
+    border: 1px solid #D8D2C6;
     border-radius: 3px;
-    background: #fcfdfe;
+    background: #fff;
     color: var(--text);
   }
   select{ font-family: var(--sans); }
-  select:focus, input:focus{ outline: 2px solid var(--blue-light); outline-offset: 1px; }
+  select:focus, input:focus{ outline: 2px solid var(--input-accent); outline-offset: 1px; }
   .field{ margin-bottom: 14px; }
   .field-row{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .radio-row{ display:flex; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
   .radio-row label{ font-weight: 500; font-size: 0.85rem; display:flex; align-items:center; gap:6px; margin:0; }
-  fieldset{ border: 1px dashed var(--line); border-radius: 4px; padding: 12px; margin: 0 0 14px; }
-  legend{ font-size: 0.82rem; font-weight: 700; color: var(--blue); padding: 0 6px; }
+  fieldset{ border: 1px dashed #C9C2B4; border-radius: 4px; padding: 12px; margin: 0 0 14px; }
+  legend{ font-size: 0.82rem; font-weight: 700; color: var(--input-accent); padding: 0 6px; }
   .app-fields{ display:none; }
   .app-fields.show{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top: 10px; }
 
-  /* inline reference disclosures, placed right next to the fields they explain */
-  details.inline-ref{ border: 1px solid var(--line); border-radius: 4px; margin: 4px 0 4px; background: var(--blue-pale); }
-  details.inline-ref summary{ cursor:pointer; padding: 7px 10px; font-weight: 600; color: var(--blue); font-size: 0.78rem; list-style: none; }
+  details.inline-ref{ border: 1px solid #D8D2C6; border-radius: 4px; margin: 4px 0 4px; background: #F1EDE4; }
+  details.inline-ref summary{ cursor:pointer; padding: 7px 10px; font-weight: 600; color: var(--input-accent); font-size: 0.78rem; list-style: none; }
   details.inline-ref summary::-webkit-details-marker{ display:none; }
   details.inline-ref summary::before{ content: "▸ "; }
   details.inline-ref[open] summary::before{ content: "▾ "; }
-  details.inline-ref .content{ padding: 8px 10px 10px; background:#fff; border-top: 1px solid var(--line); }
+  details.inline-ref .content{ padding: 8px 10px 10px; background:#fff; border-top: 1px solid #D8D2C6; }
   table.datatable{ border-collapse: collapse; width: 100%; font-size: 0.74rem; }
-  table.datatable th, table.datatable td{ border: 1px solid var(--line); padding: 4px 6px; text-align:left; }
-  table.datatable th{ background: var(--blue-pale); color: var(--blue); }
+  table.datatable th, table.datatable td{ border: 1px solid #D8D2C6; padding: 4px 6px; text-align:left; }
+  table.datatable th{ background: #EDE8DC; color: var(--input-accent); }
   table.datatable td.num{ font-family: var(--mono); text-align:right; }
-  .table-cat{ font-weight:700; color: var(--blue); font-size: 0.76rem; margin: 8px 0 3px; }
+  .table-cat{ font-weight:700; color: var(--input-accent); font-size: 0.76rem; margin: 8px 0 3px; }
   .table-cat:first-child{ margin-top:0; }
 
-  /* GSI published-chart link box */
   .chart-link-box{
-    border: 1px solid var(--blue-light);
-    background: var(--blue-pale);
+    border: 1px solid var(--input-accent);
+    background: #F1EDE4;
     border-radius: 4px;
     padding: 10px 12px;
     margin: 4px 0 10px;
   }
   .chart-link-box a.chart-btn{
     display:inline-block;
-    background: var(--blue);
+    background: var(--input-accent);
     color:#fff;
     text-decoration:none;
     font-size: 0.8rem;
@@ -148,12 +176,11 @@
     border-radius: 3px;
     margin: 4px 6px 4px 0;
   }
-  .chart-link-box a.chart-btn:hover{ background: var(--blue-light); }
-  .chart-link-box a.chart-link-secondary{ font-size: 0.78rem; color: var(--blue); }
+  .chart-link-box a.chart-btn:hover{ opacity: 0.88; }
 
   button.calc-btn{
     width: 100%;
-    background: var(--blue);
+    background: var(--input-accent);
     color: #fff;
     border: none;
     padding: 11px;
@@ -162,50 +189,120 @@
     border-radius: 3px;
     cursor: pointer;
     letter-spacing: 0.3px;
+    position: sticky;
+    bottom: 0;
   }
-  button.calc-btn:hover{ background: var(--blue-light); }
+  button.calc-btn:hover{ opacity: 0.92; }
 
+  /* ============ OUTPUT ============ */
+  .out-block{ background:#fff; border-radius:4px; padding:16px; box-shadow: 0 0 0 1px rgba(27,79,114,0.08); }
   .result-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; margin-bottom: 8px;}
-  .result-item{ border-bottom: 1px dotted var(--line); padding: 6px 0; }
+  .result-item{ border-bottom: 1px dotted #C7D2DA; padding: 6px 0; }
   .result-item .k{ font-size: 0.76rem; color: var(--text-mute); }
-  .result-item .v{ font-family: var(--mono); font-size: 1.02rem; font-weight: 600; color: var(--blue); }
+  .result-item .v{ font-family: var(--mono); font-size: 1.02rem; font-weight: 600; color: var(--output-accent); }
   .result-item .u{ font-size: 0.72rem; color: var(--text-mute); font-family: var(--mono); }
-  .section-sub{ font-weight:700; font-size:0.8rem; color: var(--blue); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.4px; }
+  .section-sub{ font-weight:700; font-size:0.8rem; color: var(--output-accent); margin: 14px 0 6px; text-transform: uppercase; letter-spacing: 0.4px; }
   .section-sub:first-child{ margin-top:0; }
 
   .flag{ border-radius: 3px; padding: 8px 12px; font-size: 0.8rem; margin: 8px 0; display:flex; gap:8px; align-items:flex-start; }
   .flag.warn{ background: var(--amber-pale); border: 1px solid var(--amber); color: #7A4E09; }
-  .flag.ok{ background: var(--green-pale); border: 1px solid var(--green); color: #145130; }
-  .flag.info{ background: var(--blue-pale); border: 1px solid var(--blue-light); color: var(--blue); }
+  .flag.fail{ background: var(--red-pale); border: 1px solid var(--red); color: #7A2A26; }
+  .flag.ok{ background: var(--green-pale); border: 1px solid var(--green); color: #1F4E36; }
+  .flag.info{ background: #E7EEF3; border: 1px solid var(--output-accent); color: var(--output-accent); }
   .flag .icon{ font-weight: 800; }
 
   .plot-wrap{ display:grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 680px){ .plot-wrap{ grid-template-columns: 1fr; } }
-  .plot-title{ font-size: 0.8rem; font-weight: 700; color: var(--blue); margin-bottom: 4px; }
-  .plot-svg{ width: 100%; height: auto; background: #fcfdfe; border: 1px solid var(--line); border-radius: 3px; }
-  .grid-line{ stroke: var(--grid); stroke-width: 1; }
+  .plot-title{ font-size: 0.8rem; font-weight: 700; color: var(--output-accent); margin-bottom: 4px; }
+  .plot-svg{ width: 100%; height: auto; background: #fcfdfe; border: 1px solid #C7D2DA; border-radius: 3px; }
+  .grid-line{ stroke: rgba(27,79,114,0.09); stroke-width: 1; }
   .axis-line{ stroke: var(--text); stroke-width: 1.2; }
   .axis-label{ font-family: var(--sans); font-size: 10px; fill: var(--text-mute); }
   .tick-label{ font-family: var(--mono); font-size: 9px; fill: var(--text-mute); }
-  .hb-curve{ fill:none; stroke: var(--blue); stroke-width: 2.4; }
+  .hb-curve{ fill:none; stroke: var(--output-accent); stroke-width: 2.4; }
   .mc-line{ fill:none; stroke: var(--amber); stroke-width: 1.8; stroke-dasharray: 6 4; }
   .legend-row{ display:flex; gap:16px; font-size: 0.74rem; margin-top: 6px; color: var(--text-mute); }
   .legend-row span{ display:flex; align-items:center; gap:5px; }
   .swatch{ width:16px; height:3px; display:inline-block; }
 
-  footer.disclaimer{
-    margin-top: 20px;
-    border: 1px solid var(--amber);
-    background: var(--amber-pale);
-    border-radius: 4px;
-    padding: 12px 16px;
-    font-size: 0.76rem;
-    color: #7A4E09;
+  /* ============ FOOTER / COPYRIGHT ============ */
+  footer.sitefoot{
+    padding: 14px 24px 4px;
+    font-size: 0.74rem;
+    color: var(--text-mute);
+    text-align: center;
+    border-top: 1px solid #E4E0D6;
+    margin: 6px 24px 0;
   }
-  footer.disclaimer b{ color: #5A3A06; }
+
+  /* ============ PRINT-ONLY running header/footer ============ */
+  .print-header, .print-footer{ display:none; }
+
+  /* ============ PRINT / A4 PDF LAYOUT ============ */
+  @page{
+    size: A4;
+    margin: 24mm 14mm 20mm 14mm;
+  }
+  @media print{
+    body{ background:#fff; }
+    .toolbar-actions{ display:none !important; }
+    .disclaimer-bar{ border-bottom: 1px solid var(--amber); }
+    .layout{
+      display:block;
+      padding: 0;
+    }
+    .col-divider{ display:none; }
+    .col-input{
+      max-height:none; overflow:visible; position:static;
+      background:#fff;
+      border: 1px solid #D8D2C6;
+      margin-bottom: 14px;
+      page-break-inside: avoid;
+    }
+    .col-output{ background:#fff; padding:0; }
+    .out-block{ box-shadow:none; border:1px solid #C7D2DA; page-break-inside: avoid; }
+    button.calc-btn{ display:none; }
+    details.inline-ref{ display:none; } /* reference lookups omitted from printed report */
+    .plot-wrap{ page-break-inside: avoid; }
+    .plot-title, .legend-row{ color: var(--text-mute) !important; }
+
+    .print-header{
+      display:block;
+      position: fixed;
+      top: -18mm;
+      left: 0; right: 0;
+      font-family: var(--mono);
+      font-size: 8.5pt;
+      color: var(--text-mute);
+      border-bottom: 1px solid #C7D2DA;
+      padding-bottom: 3mm;
+    }
+    .print-footer{
+      display:block;
+      position: fixed;
+      bottom: -16mm;
+      left: 0; right: 0;
+      font-size: 7.8pt;
+      color: var(--text-mute);
+      border-top: 1px solid #C7D2DA;
+      padding-top: 2.5mm;
+      display:flex; justify-content:space-between; gap: 10px;
+    }
+    footer.sitefoot{ display:none; } /* replaced by print-footer */
+    a.chart-btn{ display:none; } /* links are not clickable on paper */
+    .chart-link-box .hint{ display:block; }
+  }
 </style>
 </head>
 <body>
+
+<!-- Fixed running header/footer: rendered only when printing -->
+<div class="print-header">Design Rock Mass Parameters — Hoek-Brown / GSI &nbsp;·&nbsp; Method basis: Hoek-Brown 2002 / 2006 / 2018</div>
+<div class="print-footer">
+  <span>Preliminary/educational use only — verify independently before design use.</span>
+  <span>© <span id="printYear"></span> Vishal Bansal</span>
+</div>
+
 <div class="sheet">
 
   <header class="titleblock">
@@ -213,178 +310,173 @@
       <h1>Design Rock Mass Parameters — Hoek-Brown / GSI</h1>
       <div class="subtitle">Generalized Hoek-Brown criterion (Hoek, Carranza-Torres &amp; Corkum, 2002) · Deformation modulus (Hoek &amp; Diederichs, 2006) · GSI chart (Hoek, Marinos &amp; Cai, updated 2018)</div>
     </div>
-    <div class="code-tag">tool-rock-parameters.html<br>Method basis: Hoek-Brown 2002 / 2006 / 2018</div>
+    <div class="toolbar-actions">
+      <button class="print-btn" onclick="window.print()">🖶 Print / Save as PDF</button>
+    </div>
   </header>
 
-  <main>
+  <div class="disclaimer-bar">
+    <b>Disclaimer:</b> This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction. Hoek-Brown/GSI parameter derivation is a widely used empirical method, not a project-specific design code; input selection (σci, GSI, mi, D) requires engineering geological judgement and, wherever practical, site-specific investigation and laboratory testing. This is not a substitute for professional judgment or compliance verification against applicable project-specific code requirements.
+  </div>
 
-    <div class="flag info" style="margin-bottom:16px;"><span class="icon">i</span><span>This tool derives <b>equivalent rock mass strength and deformation parameters</b> from the Generalized Hoek-Brown criterion. It is not tied to IS/Eurocode/ACI — Hoek-Brown is an internationally used rock mass constitutive model, and inputs should still be selected using local engineering geological judgement and, where possible, site testing.</span></div>
+  <div class="layout">
 
-    <div class="layout">
+    <!-- ============ LEFT: INPUTS ============ -->
+    <div class="col-input">
+      <h2 class="col-title">Inputs</h2>
 
-      <!-- ============ LEFT: INPUTS ============ -->
-      <div class="col-input">
-        <section class="panel">
-          <div class="panel-head">Inputs</div>
-          <div class="panel-body">
+      <fieldset>
+        <legend>Intact rock</legend>
 
-            <fieldset>
-              <legend>Intact rock</legend>
+        <div class="field">
+          <label for="rockCategory">Rock type (for guidance only — mi and MR auto-fill, both editable)</label>
+          <select id="rockCategory"></select>
+        </div>
 
-              <div class="field">
-                <label for="rockCategory">Rock type (for guidance only — mi and MR auto-fill, both editable)</label>
-                <select id="rockCategory"></select>
-              </div>
-
-              <div class="field-row">
-                <div class="field">
-                  <label for="sci">σci — intact rock UCS</label>
-                  <input type="number" id="sci" value="50" min="0.1" step="0.5">
-                  <p class="hint">MPa. From UCS test on intact core, or point load index × 20-24 as a rough estimate.</p>
-                </div>
-                <div class="field">
-                  <label for="mi">mi — intact material constant</label>
-                  <input type="number" id="mi" value="17" min="1" step="0.5">
-                  <p class="hint">Auto-filled from rock type; adjust if triaxial data on intact core exists.</p>
-                </div>
-              </div>
-
-              <details class="inline-ref">
-                <summary>Reference: mi and MR guide values by rock type</summary>
-                <div class="content" id="refRockTable1"></div>
-              </details>
-            </fieldset>
-
-            <fieldset>
-              <legend>GSI — Geological Strength Index</legend>
-              <div class="field">
-                <label for="gsi">GSI value</label>
-                <input type="number" id="gsi" value="55" min="1" max="100" step="1">
-                <p class="hint">0-100. Use the published chart below to estimate GSI from structure and discontinuity surface condition, then enter the value here.</p>
-              </div>
-              <div class="chart-link-box">
-                <div style="font-size:0.8rem; font-weight:600; color:var(--blue); margin-bottom:6px;">Published GSI chart (Hoek, Marinos &amp; Cai)</div>
-                <a class="chart-btn" href="https://www.rocscience.com/assets/resources/learning/hoek/The-GSI-Applications-and-Limitations-2005.pdf" target="_blank" rel="noopener">Open the GSI chart (PDF, Figs. 1-2)</a>
-                <a class="chart-btn" href="https://www.rocscience.com/learning/hoeks-corner" target="_blank" rel="noopener">Browse Hoek's Corner (all charts)</a>
-                <p class="hint" style="margin:8px 0 0;">These are the original published figures — reproduced here only as a link, not copied into this page, out of respect for the authors' copyright. For foliated/laminated rocks (schist, phyllite, slate) where shear along foliation controls behaviour, use the separate low-GSI "laminated/sheared" row per the 2018 update rather than the general chart.</p>
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend>Disturbance factor, D</legend>
-              <div class="field">
-                <label for="dPreset">Excavation condition</label>
-                <select id="dPreset"></select>
-              </div>
-              <div class="field">
-                <label for="dValue">D value (0 = undisturbed, 1 = heavily disturbed)</label>
-                <input type="number" id="dValue" value="0" min="0" max="1" step="0.05">
-                <p class="hint">Selecting a preset above fills this in; fine-tune manually between 0 and 1.</p>
-              </div>
-              <details class="inline-ref">
-                <summary>Reference: D guideline descriptions</summary>
-                <div class="content" id="refDTable"></div>
-              </details>
-            </fieldset>
-
-            <fieldset>
-              <legend>Deformation modulus method</legend>
-              <div class="radio-row">
-                <label><input type="radio" name="defMethod" value="mr" checked> Estimate Ei from MR × σci</label>
-                <label><input type="radio" name="defMethod" value="direct"> I know Ei directly</label>
-              </div>
-              <div class="field" id="mrField">
-                <label for="mr">MR — modulus ratio (Ei / σci)</label>
-                <input type="number" id="mr" value="350" min="1" step="5">
-                <p class="hint">Auto-filled by rock type (broad category average, Hoek &amp; Diederichs 2006). Edit if lab data exists.</p>
-                <details class="inline-ref">
-                  <summary>Reference: mi and MR guide values by rock type</summary>
-                  <div class="content" id="refRockTable2"></div>
-                </details>
-              </div>
-              <div class="field" id="eiField" style="display:none;">
-                <label for="eiDirect">Ei — intact rock modulus</label>
-                <input type="number" id="eiDirect" value="15" min="0.1" step="0.5">
-                <p class="hint">GPa, from lab deformation test on intact core.</p>
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend>Application &amp; σ3max (stress range for the equivalent Mohr-Coulomb fit)</legend>
-              <div class="field">
-                <label for="application">Application type</label>
-                <select id="application">
-                  <option value="tunnel" selected>Tunnel</option>
-                  <option value="slope">Slope</option>
-                  <option value="foundation">Foundation</option>
-                  <option value="manual">General / manual σ3max</option>
-                </select>
-                <p class="hint">Auto-suggests σ3max using Hoek et al. (2002) empirical relations. Always overridable below.</p>
-              </div>
-              <div class="app-fields show" id="appFields">
-                <div class="field">
-                  <label for="gamma">Unit weight, γ</label>
-                  <input type="number" id="gamma" value="25" min="10" step="0.5">
-                  <p class="hint">kN/m³</p>
-                </div>
-                <div class="field">
-                  <label for="depth">Depth / height, H</label>
-                  <input type="number" id="depth" value="150" min="1" step="1">
-                  <p class="hint">m (overburden depth for tunnel; slope height for slope)</p>
-                </div>
-              </div>
-              <div class="field">
-                <label for="sigma3max">σ3max used for c′, φ′ fit <span id="sigma3maxSrc" style="font-weight:400;color:var(--text-mute);"></span></label>
-                <input type="number" id="sigma3max" value="1" min="0.001" step="0.1">
-                <p class="hint">MPa. Auto-computed above; type over it to override manually at any time.</p>
-              </div>
-            </fieldset>
-
-            <button class="calc-btn" id="calcBtn">Calculate rock mass parameters</button>
+        <div class="field-row">
+          <div class="field">
+            <label for="sci">σci — intact rock UCS</label>
+            <input type="number" id="sci" value="50" min="0.1" step="0.5">
+            <p class="hint">MPa. From UCS test on intact core, or point load index × 20-24 as a rough estimate.</p>
           </div>
-        </section>
-      </div>
-
-      <!-- ============ RIGHT: OUTPUTS ============ -->
-      <div class="col-output">
-        <section class="panel">
-          <div class="panel-head">Derived rock mass parameters</div>
-          <div class="panel-body" id="outputBody">
-            <p class="hint">Enter inputs on the left and click Calculate.</p>
+          <div class="field">
+            <label for="mi">mi — intact material constant</label>
+            <input type="number" id="mi" value="17" min="1" step="0.5">
+            <p class="hint">Auto-filled from rock type; adjust if triaxial data on intact core exists.</p>
           </div>
-        </section>
+        </div>
 
-        <section class="panel">
-          <div class="panel-head">Strength envelopes</div>
-          <div class="panel-body">
-            <div class="plot-wrap">
-              <div>
-                <div class="plot-title">Principal stress space (σ1′ vs σ3′)</div>
-                <div id="plot1"></div>
-                <div class="legend-row">
-                  <span><span class="swatch" style="background:var(--blue);"></span> Hoek-Brown envelope</span>
-                  <span><span class="swatch" style="background:var(--amber); border-top:2px dashed var(--amber); height:0;"></span> Equivalent Mohr-Coulomb</span>
-                </div>
-              </div>
-              <div>
-                <div class="plot-title">Shear / normal stress space (τ vs σn′)</div>
-                <div id="plot2"></div>
-                <div class="legend-row">
-                  <span><span class="swatch" style="background:var(--blue);"></span> Hoek-Brown envelope</span>
-                  <span><span class="swatch" style="background:var(--amber); border-top:2px dashed var(--amber); height:0;"></span> Equivalent Mohr-Coulomb</span>
-                </div>
-              </div>
-            </div>
+        <details class="inline-ref">
+          <summary>Reference: mi and MR guide values by rock type</summary>
+          <div class="content" id="refRockTable1"></div>
+        </details>
+      </fieldset>
+
+      <fieldset>
+        <legend>GSI — Geological Strength Index</legend>
+        <div class="field">
+          <label for="gsi">GSI value</label>
+          <input type="number" id="gsi" value="55" min="1" max="100" step="1">
+          <p class="hint">0-100. Use the published chart below to estimate GSI from structure and discontinuity surface condition, then enter the value here.</p>
+        </div>
+        <div class="chart-link-box">
+          <div style="font-size:0.8rem; font-weight:600; color:var(--input-accent); margin-bottom:6px;">Published GSI chart (Hoek, Marinos &amp; Cai)</div>
+          <a class="chart-btn" href="https://www.rocscience.com/assets/resources/learning/hoek/The-GSI-Applications-and-Limitations-2005.pdf" target="_blank" rel="noopener">Open the GSI chart (PDF, Figs. 1-2)</a>
+          <a class="chart-btn" href="https://www.rocscience.com/learning/hoeks-corner" target="_blank" rel="noopener">Browse Hoek's Corner (all charts)</a>
+          <p class="hint" style="margin:8px 0 0;">These are the original published figures — linked here, not reproduced, out of respect for the authors' copyright. For foliated/laminated rocks (schist, phyllite, slate) where shear along foliation controls behaviour, use the separate low-GSI "laminated/sheared" row per the 2018 update rather than the general chart.</p>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Disturbance factor, D</legend>
+        <div class="field">
+          <label for="dPreset">Excavation condition</label>
+          <select id="dPreset"></select>
+        </div>
+        <div class="field">
+          <label for="dValue">D value (0 = undisturbed, 1 = heavily disturbed)</label>
+          <input type="number" id="dValue" value="0" min="0" max="1" step="0.05">
+          <p class="hint">Selecting a preset above fills this in; fine-tune manually between 0 and 1.</p>
+        </div>
+        <details class="inline-ref">
+          <summary>Reference: D guideline descriptions</summary>
+          <div class="content" id="refDTable"></div>
+        </details>
+      </fieldset>
+
+      <fieldset>
+        <legend>Deformation modulus method</legend>
+        <div class="radio-row">
+          <label><input type="radio" name="defMethod" value="mr" checked> Estimate Ei from MR × σci</label>
+          <label><input type="radio" name="defMethod" value="direct"> I know Ei directly</label>
+        </div>
+        <div class="field" id="mrField">
+          <label for="mr">MR — modulus ratio (Ei / σci)</label>
+          <input type="number" id="mr" value="350" min="1" step="5">
+          <p class="hint">Auto-filled by rock type (broad category average, Hoek &amp; Diederichs 2006). Edit if lab data exists.</p>
+          <details class="inline-ref">
+            <summary>Reference: mi and MR guide values by rock type</summary>
+            <div class="content" id="refRockTable2"></div>
+          </details>
+        </div>
+        <div class="field" id="eiField" style="display:none;">
+          <label for="eiDirect">Ei — intact rock modulus</label>
+          <input type="number" id="eiDirect" value="15" min="0.1" step="0.5">
+          <p class="hint">GPa, from lab deformation test on intact core.</p>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Application &amp; σ3max (stress range for the equivalent Mohr-Coulomb fit)</legend>
+        <div class="field">
+          <label for="application">Application type</label>
+          <select id="application">
+            <option value="tunnel" selected>Tunnel</option>
+            <option value="slope">Slope</option>
+            <option value="foundation">Foundation</option>
+            <option value="manual">General / manual σ3max</option>
+          </select>
+          <p class="hint">Auto-suggests σ3max using Hoek et al. (2002) empirical relations. Always overridable below.</p>
+        </div>
+        <div class="app-fields show" id="appFields">
+          <div class="field">
+            <label for="gamma">Unit weight, γ</label>
+            <input type="number" id="gamma" value="25" min="10" step="0.5">
+            <p class="hint">kN/m³</p>
           </div>
-        </section>
-      </div>
+          <div class="field">
+            <label for="depth">Depth / height, H</label>
+            <input type="number" id="depth" value="150" min="1" step="1">
+            <p class="hint">m (overburden depth for tunnel; slope height for slope)</p>
+          </div>
+        </div>
+        <div class="field">
+          <label for="sigma3max">σ3max used for c′, φ′ fit <span id="sigma3maxSrc" style="font-weight:400;color:var(--text-mute);"></span></label>
+          <input type="number" id="sigma3max" value="1" min="0.001" step="0.1">
+          <p class="hint">MPa. Auto-computed above; type over it to override manually at any time.</p>
+        </div>
+      </fieldset>
 
+      <button class="calc-btn" id="calcBtn">Calculate rock mass parameters</button>
     </div>
 
-  </main>
+    <div class="col-divider"></div>
 
-  <footer class="disclaimer">
-    <b>Disclaimer:</b> This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction. Hoek-Brown/GSI parameter derivation is a widely used empirical method, not a project-specific design code; input selection (σci, GSI, mi, D) requires engineering geological judgement and, wherever practical, site-specific investigation and laboratory testing. This is not a substitute for professional judgment or compliance verification against applicable project-specific code requirements.
+    <!-- ============ RIGHT: OUTPUTS ============ -->
+    <div class="col-output">
+      <h2 class="col-title">Results</h2>
+
+      <div class="out-block" id="outputBody">
+        <p class="hint">Enter inputs on the left and click Calculate.</p>
+      </div>
+
+      <div class="out-block">
+        <div class="section-sub">Strength envelopes</div>
+        <div class="plot-wrap">
+          <div>
+            <div class="plot-title">Principal stress space (σ1′ vs σ3′)</div>
+            <div id="plot1"></div>
+            <div class="legend-row">
+              <span><span class="swatch" style="background:var(--output-accent);"></span> Hoek-Brown envelope</span>
+              <span><span class="swatch" style="background:var(--amber); border-top:2px dashed var(--amber); height:0;"></span> Equivalent Mohr-Coulomb</span>
+            </div>
+          </div>
+          <div>
+            <div class="plot-title">Shear / normal stress space (τ vs σn′)</div>
+            <div id="plot2"></div>
+            <div class="legend-row">
+              <span><span class="swatch" style="background:var(--output-accent);"></span> Hoek-Brown envelope</span>
+              <span><span class="swatch" style="background:var(--amber); border-top:2px dashed var(--amber); height:0;"></span> Equivalent Mohr-Coulomb</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="sitefoot">
+    © <span id="footYear"></span> Vishal Bansal — Civil / Tunnel Tools Suite. Tool file: tool-rock-parameters.html
   </footer>
 
 </div>
@@ -527,6 +619,10 @@ document.addEventListener('DOMContentLoaded', ()=>{
   populateDPreset();
   buildRefRockTables();
   buildRefDTable();
+
+  const yr = new Date().getFullYear();
+  document.getElementById('printYear').textContent = yr;
+  document.getElementById('footYear').textContent = yr;
 
   document.getElementById('rockCategory').addEventListener('change', ()=>{
     const r = currentRock();
@@ -693,14 +789,14 @@ function recalcAll(){
   const out = document.getElementById('outputBody');
   const warnings = [];
 
-  if(!(sci>0)) warnings.push(['warn','σci must be greater than zero.']);
-  if(!(mi>0)) warnings.push(['warn','mi must be greater than zero.']);
-  if(!(gsi>0 && gsi<=100)) warnings.push(['warn','GSI must be between 1 and 100.']);
-  if(!(D>=0 && D<=1)) warnings.push(['warn','D must be between 0 and 1.']);
+  if(!(sci>0)) warnings.push(['fail','σci must be greater than zero.']);
+  if(!(mi>0)) warnings.push(['fail','mi must be greater than zero.']);
+  if(!(gsi>0 && gsi<=100)) warnings.push(['fail','GSI must be between 1 and 100.']);
+  if(!(D>=0 && D<=1)) warnings.push(['fail','D must be between 0 and 1.']);
 
   if(!(sci>0) || !(mi>0) || !(gsi>0&&gsi<=100) || !(D>=0&&D<=1)){
-    out.innerHTML = '<div class="flag warn"><span class="icon">!</span><span>Fix the highlighted inputs to see results.</span></div>'
-      + warnings.map(w=>'<div class="flag warn"><span class="icon">!</span><span>'+w[1]+'</span></div>').join('');
+    out.innerHTML = '<div class="flag fail"><span class="icon">!</span><span>Fix the highlighted inputs to see results.</span></div>'
+      + warnings.map(w=>'<div class="flag '+w[0]+'"><span class="icon">!</span><span>'+w[1]+'</span></div>').join('');
     return;
   }
 
@@ -728,7 +824,7 @@ function recalcAll(){
   const sigma3max = parseFloat(document.getElementById('sigma3max').value);
 
   if(!(sigma3max>0)){
-    out.innerHTML = '<div class="flag warn"><span class="icon">!</span><span>Enter a valid σ3max &gt; 0 (or provide γ and H for auto-suggestion) to compute the equivalent Mohr-Coulomb fit and plots.</span></div>';
+    out.innerHTML = '<div class="flag fail"><span class="icon">!</span><span>Enter a valid σ3max &gt; 0 (or provide γ and H for auto-suggestion) to compute the equivalent Mohr-Coulomb fit and plots.</span></div>';
     return;
   }
 
@@ -758,7 +854,7 @@ function recalcAll(){
     + resultItem('φ′ — friction angle', fmt(phiDeg,1), 'deg')
     + '</div>'
     + '<div class="flag info" style="margin-top:10px;"><span class="icon">i</span><span>c′/φ′ are only valid within the fitted σ3′ range above — do not extrapolate the linear fit beyond σ3max.</span></div>'
-    + warnings.map(w=>'<div class="flag '+w[0]+'"><span class="icon">'+(w[0]==='warn'?'!':(w[0]==='ok'?'✓':'i'))+'</span><span>'+w[1]+'</span></div>').join('');
+    + warnings.map(w=>'<div class="flag '+w[0]+'"><span class="icon">'+(w[0]==='fail'||w[0]==='warn'?'!':(w[0]==='ok'?'✓':'i'))+'</span><span>'+w[1]+'</span></div>').join('');
 
   const curve1 = hbCurveData(sci,mb,s,a,sigma3max);
   const line1  = mcLineData(c,phiDeg,sigma3max);
