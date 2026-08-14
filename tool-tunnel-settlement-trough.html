@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settlement Trough Calculator — Gaussian Curve Method</title>
+<style>
+  :root{
+    --input-bg:#FAF8F5;
+    --input-bg-alt:#F5F3EE;
+    --input-accent:#3D5A73;
+    --output-bg:#F0F4F7;
+    --output-accent:#1B4F72;
+    --divider:#D5D0C8;
+    --grid:#D7E3E9;
+    --amber:#D68910;
+    --red:#B0413E;
+    --green:#3F7D5C;
+    --text-dark:#2B2B2B;
+    --text-muted:#6B6B62;
+    --font-sans:'Inter','Roboto',system-ui,-apple-system,"Segoe UI",sans-serif;
+    --font-mono:'Roboto Mono',ui-monospace,"SFMono-Regular",Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;font-family:var(--font-sans);color:var(--text-dark);background:#EDEAE3;}
+
+  /* ---------- header ---------- */
+  .header{
+    background:#22333F;
+    color:#F0F4F7;
+    padding:14px 24px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:6px;
+    border-bottom:3px solid var(--output-accent);
+  }
+  .header h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.2px;}
+  .header .code-ref{font-family:var(--font-mono);font-size:12.5px;color:#BFD0DA;}
+  .header .disclaimer-strip{
+    width:100%;
+    font-size:11px;
+    color:#9FB2BD;
+    margin-top:4px;
+    border-top:1px solid #3B4E5A;
+    padding-top:6px;
+  }
+
+  /* ---------- layout ---------- */
+  .container{
+    display:flex;
+    align-items:flex-start;
+    min-height:calc(100vh - 110px);
+  }
+  .col-input{
+    width:38%;
+    background:var(--input-bg);
+    padding:20px 22px 100px 22px;
+    position:sticky;
+    top:0;
+    align-self:flex-start;
+    max-height:100vh;
+    overflow-y:auto;
+    border-right:1.5px solid var(--divider);
+  }
+  .col-output{
+    width:62%;
+    background:var(--output-bg);
+    padding:20px 26px 60px 26px;
+  }
+  @media (max-width:900px){
+    .container{flex-direction:column;}
+    .col-input,.col-output{width:100%;position:relative;max-height:none;border-right:none;}
+    .col-input{border-bottom:1.5px solid var(--divider);}
+  }
+
+  /* ---------- input styling ---------- */
+  fieldset{
+    border:1px solid var(--divider);
+    border-radius:3px;
+    margin:0 0 16px 0;
+    padding:12px 14px 14px 14px;
+    background:var(--input-bg-alt);
+  }
+  legend{
+    font-size:12px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--input-accent);
+    padding:0 6px;
+  }
+  label{
+    display:block;
+    font-size:13.5px;
+    font-weight:500;
+    color:var(--text-dark);
+    margin:10px 0 3px 0;
+  }
+  label .unit{color:var(--text-muted);font-weight:400;font-size:12px;}
+  input[type=number], input[type=text]{
+    width:100%;
+    padding:6px 8px;
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    border:1px solid #C7C1B6;
+    border-radius:3px;
+    background:#fff;
+    color:var(--text-dark);
+  }
+  input:focus{
+    outline:none;
+    border-color:var(--input-accent);
+    box-shadow:0 0 0 2px rgba(61,90,115,0.18);
+  }
+  .hint{font-size:11.5px;color:var(--text-muted);margin-top:3px;line-height:1.4;}
+  .computed{
+    font-size:12.5px;
+    font-family:var(--font-mono);
+    color:var(--input-accent);
+    background:#EFEAE0;
+    border:1px dashed #C7C1B6;
+    border-radius:3px;
+    padding:5px 8px;
+    margin-top:6px;
+  }
+  select{
+    width:100%;
+    padding:6px 8px;
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    border:1px solid #C7C1B6;
+    border-radius:3px;
+    background:#fff;
+    color:var(--text-dark);
+  }
+
+  .kguide-mini{
+    font-size:11px;
+    font-family:var(--font-mono);
+    background:#fff;
+    border:1px solid var(--divider);
+    border-radius:3px;
+    padding:6px 8px;
+    margin-top:6px;
+    color:var(--text-muted);
+  }
+  .kguide-mini table{width:100%;border-collapse:collapse;}
+  .kguide-mini td{padding:1.5px 2px;}
+
+  #calcBtnWrap{
+    position:sticky;
+    bottom:0;
+    background:linear-gradient(to top, var(--input-bg) 70%, rgba(250,248,245,0));
+    padding-top:14px;
+  }
+  #calcBtn{
+    width:100%;
+    padding:12px;
+    background:var(--input-accent);
+    color:#fff;
+    border:none;
+    border-radius:3px;
+    font-size:14.5px;
+    font-weight:600;
+    letter-spacing:.3px;
+    cursor:pointer;
+  }
+  #calcBtn:hover{background:#31485D;}
+
+  /* ---------- output styling ---------- */
+  .section-title{
+    font-size:13px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.6px;
+    color:var(--output-accent);
+    border-bottom:1.5px solid #C7D6DE;
+    padding-bottom:5px;
+    margin:26px 0 12px 0;
+  }
+  .section-title:first-child{margin-top:0;}
+
+  .chainage-line{font-size:12.5px;font-family:var(--font-mono);color:var(--text-muted);margin-bottom:10px;}
+
+  .error-banner{
+    background:#F6E4E3;
+    border:1px solid var(--red);
+    color:var(--red);
+    border-radius:3px;
+    padding:10px 14px;
+    font-size:13px;
+    margin-bottom:14px;
+    font-weight:600;
+  }
+
+  .cards{display:flex;flex-wrap:wrap;gap:10px;}
+  .card{
+    background:#fff;
+    border:1px solid #C7D6DE;
+    border-left:4px solid var(--output-accent);
+    border-radius:3px;
+    padding:10px 14px;
+    min-width:150px;
+    flex:1;
+  }
+  .card .k{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;}
+  .card .v{font-family:var(--font-mono);font-size:20px;color:var(--output-accent);font-weight:700;margin-top:2px;}
+  .card .v small{font-size:12px;font-weight:400;color:var(--text-muted);}
+
+  svg.chart{width:100%;height:auto;background:#fff;border:1px solid #C7D6DE;border-radius:3px;}
+
+  table.results{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13px;
+    background:#fff;
+    border:1px solid #C7D6DE;
+  }
+  table.results th{
+    background:#E3EBEF;
+    color:var(--output-accent);
+    text-align:left;
+    padding:7px 10px;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.4px;
+    border-bottom:1px solid #C7D6DE;
+  }
+  table.results td{
+    padding:6px 10px;
+    font-family:var(--font-mono);
+    border-bottom:1px solid #EAEAE4;
+  }
+  table.results tr:last-child td{border-bottom:none;}
+
+  .custom-x{
+    display:flex;
+    gap:10px;
+    align-items:flex-end;
+    background:#fff;
+    border:1px solid #C7D6DE;
+    border-radius:3px;
+    padding:12px 14px;
+    margin-top:6px;
+    flex-wrap:wrap;
+  }
+  .custom-x div{flex:1;min-width:140px;}
+  .custom-x label{margin:0 0 3px 0;font-size:12.5px;}
+  .custom-x button{
+    padding:7px 16px;
+    background:var(--output-accent);
+    color:#fff;border:none;border-radius:3px;font-size:13px;cursor:pointer;font-weight:600;
+  }
+  .custom-x button:hover{background:#123A57;}
+  #customResult{font-family:var(--font-mono);font-size:13px;margin-top:8px;color:var(--text-dark);}
+
+  ul.assump{margin:0;padding-left:20px;font-size:13px;line-height:1.65;}
+  ul.assump li{margin-bottom:6px;}
+  ol.refs{margin:0;padding-left:20px;font-size:12.5px;line-height:1.7;color:var(--text-dark);}
+
+  .legend-line{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--text-muted);margin-top:6px;}
+  .legend-swatch{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px;}
+
+  /* ---------- footer ---------- */
+  .footer{
+    background:#22333F;
+    color:#9FB2BD;
+    font-size:11.5px;
+    padding:16px 24px;
+    line-height:1.6;
+  }
+  .footer b{color:#D8E2E7;}
+  .copyright{
+    text-align:center;
+    font-size:11px;
+    color:#6E828D;
+    padding:10px 0 6px 0;
+    border-top:1px solid #3B4E5A;
+    margin-top:10px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Settlement Trough Calculator — Transverse Gaussian Curve Method</h1>
+  <div class="code-ref">Ref: Peck (1969) · O'Reilly &amp; New (1982) · Attewell &amp; Woodman (1982) · Mair &amp; Taylor (1997)</div>
+  <div class="disclaimer-strip">Disclaimer: This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction. This is not a substitute for professional judgment or compliance verification against the applicable project-specific code requirements.</div>
+</div>
+
+<div class="container">
+
+  <!-- ============== INPUT COLUMN ============== -->
+  <div class="col-input">
+
+    <fieldset>
+      <legend>Configuration</legend>
+      <label>Tunnel arrangement</label>
+      <select id="config" onchange="toggleTwin()">
+        <option value="single">Single tunnel</option>
+        <option value="twin">Twin tunnel (Up-line &amp; Down-line)</option>
+      </select>
+    </fieldset>
+
+    <fieldset>
+      <legend id="legA">Tunnel — chainage, levels &amp; ground loss</legend>
+
+      <label>Chainage <span class="unit">(e.g. 12+350)</span></label>
+      <input type="text" id="chainage_A" value="">
+
+      <label>Natural ground level, NGL <span class="unit">(m, amsl)</span></label>
+      <input type="number" id="NGL_A" value="102.00" step="0.05">
+
+      <label>Road / Rail level, RL <span class="unit">(m, amsl)</span></label>
+      <input type="number" id="RL_A" value="101.50" step="0.05">
+
+      <label>Distance, Road/Rail level to tunnel invert <span class="unit">(m)</span></label>
+      <input type="number" id="dist_A" value="21.75" step="0.05" min="0">
+
+      <label>Outer diameter, D <span class="unit">(m)</span></label>
+      <input type="number" id="D_A" value="6.5" step="0.1" min="0.1">
+
+      <div class="computed" id="z0disp_A">Depth to tunnel axis (calculated): — m</div>
+
+      <label>Volume loss, V<sub>l</sub> <span class="unit">(% of excavated area)</span></label>
+      <input type="number" id="Vl_A" value="1.0" step="0.1" min="0">
+      <div class="hint">Typical: 0.5–1% (well-controlled EPB/slurry TBM in favourable ground) to 1–2% (typical soft ground) to 2–4% (difficult ground / hand-mined). Site- and method-specific — enter based on project experience or back-analysis of trial data.</div>
+
+      <label>Ground type <span class="unit">(above tunnel crown — describe manually)</span></label>
+      <input type="text" id="soil_A" value="" placeholder="e.g. Stiff sandy clay">
+      <div class="hint">Descriptive only, for record and to help judge K — describe the ground between the tunnel crown and the surface, not the ground at axis level.</div>
+
+      <label>Trough width parameter, K <span class="unit">(i = K·z₀)</span></label>
+      <input type="number" id="K_A" value="0.5" step="0.01" min="0.05" max="0.8">
+      <div class="kguide-mini">
+        <table>
+          <tr><td>Stiff/fissured clay</td><td>0.4 – 0.5</td></tr>
+          <tr><td>Soft–firm clay</td><td>0.5 – 0.7</td></tr>
+          <tr><td>Sand (above WT)</td><td>0.2 – 0.3</td></tr>
+          <tr><td>Sand (below WT / loose)</td><td>0.25 – 0.35</td></tr>
+          <tr><td>Weathered rock / mixed</td><td>0.3 – 0.5 (judgment)</td></tr>
+        </table>
+      </div>
+    </fieldset>
+
+    <fieldset id="fieldsetB" style="display:none;">
+      <legend>Down-line Tunnel — chainage, levels &amp; ground loss</legend>
+
+      <label>Chainage <span class="unit">(e.g. 12+350)</span></label>
+      <input type="text" id="chainage_B" value="">
+
+      <label>Natural ground level, NGL <span class="unit">(m, amsl)</span></label>
+      <input type="number" id="NGL_B" value="102.00" step="0.05">
+
+      <label>Road / Rail level, RL <span class="unit">(m, amsl)</span></label>
+      <input type="number" id="RL_B" value="101.50" step="0.05">
+
+      <label>Distance, Road/Rail level to tunnel invert <span class="unit">(m)</span></label>
+      <input type="number" id="dist_B" value="21.75" step="0.05" min="0">
+
+      <label>Outer diameter, D <span class="unit">(m)</span></label>
+      <input type="number" id="D_B" value="6.5" step="0.1" min="0.1">
+
+      <div class="computed" id="z0disp_B">Depth to tunnel axis (calculated): — m</div>
+
+      <label>Volume loss, V<sub>l</sub> <span class="unit">(%)</span></label>
+      <input type="number" id="Vl_B" value="1.0" step="0.1" min="0">
+
+      <label>Ground type <span class="unit">(above tunnel crown — describe manually)</span></label>
+      <input type="text" id="soil_B" value="" placeholder="e.g. Stiff sandy clay">
+
+      <label>Trough width parameter, K <span class="unit">(i = K·z₀)</span></label>
+      <input type="number" id="K_B" value="0.5" step="0.01" min="0.05" max="0.8">
+    </fieldset>
+
+    <fieldset id="spacingFieldset" style="display:none;">
+      <legend>Twin tunnel spacing</legend>
+      <label>Centre-to-centre spacing, s <span class="unit">(m)</span></label>
+      <input type="number" id="spacing" value="15" step="0.5" min="0.1">
+      <div class="hint">Horizontal distance between the Up-line and Down-line tunnel axes (Down-line taken to the right of Up-line).</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Plot range</legend>
+      <label>Half-width of plot, x<sub>max</sub> <span class="unit">(m, 0 = auto)</span></label>
+      <input type="number" id="xmax" value="0" step="1" min="0">
+    </fieldset>
+
+    <div id="calcBtnWrap">
+      <button id="calcBtn" onclick="calculate()">Calculate settlement trough</button>
+    </div>
+  </div>
+
+  <!-- ============== OUTPUT COLUMN ============== -->
+  <div class="col-output">
+
+    <div id="errorHolder"></div>
+
+    <div class="section-title">Key results</div>
+    <div class="chainage-line" id="chainageInfo"></div>
+    <div class="cards" id="cards"></div>
+
+    <div class="section-title">Settlement trough &amp; tunnel section</div>
+    <div id="chartHolder"></div>
+    <div class="legend-line" id="chartLegend"></div>
+
+    <div class="section-title">Settlement at key offsets</div>
+    <table class="results" id="resultsTable"></table>
+
+    <div class="section-title">Distance of key settlement contours</div>
+    <table class="results" id="contourTable"></table>
+    <div class="hint" style="margin-top:6px;">Offsets are measured from the Up-line tunnel centreline. Where two values are shown, the contour is crossed on both sides of the trough (or on both sides of each tunnel, for twin troughs).</div>
+
+    <div class="section-title">Settlement at a specific offset</div>
+    <div class="custom-x">
+      <div>
+        <label>Offset from Up-line centreline, x <span class="unit">(m, +ve either side)</span></label>
+        <input type="number" id="customX" value="0" step="0.5">
+      </div>
+      <button onclick="computeCustomX()">Compute</button>
+    </div>
+    <div id="customResult"></div>
+
+    <div class="section-title">Guidance for choosing K</div>
+    <p style="font-size:13px;line-height:1.6;">
+      K (trough width parameter, i = K·z₀) reflects how "peaked" or "wide" the settlement trough is, and depends primarily on the ground type above the tunnel crown:
+    </p>
+    <table class="results">
+      <tr><th>Ground condition</th><th>Typical K range</th><th>Notes</th></tr>
+      <tr><td>Stiff / fissured clay (e.g. London Clay type)</td><td>0.4 – 0.5</td><td>Most widely quoted default for stiff clay is K ≈ 0.5</td></tr>
+      <tr><td>Soft to firm clay</td><td>0.5 – 0.7</td><td>Wider, shallower troughs than stiff clay in some cases</td></tr>
+      <tr><td>Sand / gravel, above water table</td><td>0.2 – 0.3</td><td>Narrower, more peaked trough</td></tr>
+      <tr><td>Sand, below water table / loose</td><td>0.25 – 0.35</td><td>Confirm with local case-history data where available</td></tr>
+      <tr><td>Weathered rock / residual / mixed ground</td><td>0.3 – 0.5</td><td>Engineering judgment; consider layering above crown</td></tr>
+    </table>
+    <p style="font-size:12.5px;color:var(--text-muted);line-height:1.6;">
+      K is entered manually in this tool — the table above is reference guidance only. Where possible, calibrate K against local monitoring / case-history data for the specific ground and method rather than relying on generic ranges.
+    </p>
+
+    <div class="section-title">Assumptions &amp; limitations</div>
+    <ul class="assump">
+      <li>Transverse settlement trough only, computed for the long-term / steady-state condition after the tunnel face has advanced well beyond the section considered. Longitudinal (face-advance) settlement profile is not covered by this tool.</li>
+      <li>Greenfield conditions are assumed — no allowance is made for the stiffening or load-shedding effect of existing structures, piles, or buried services within the zone of influence.</li>
+      <li>Depth to tunnel axis (z₀) is derived from Natural Ground Level, Road/Rail level, and the distance from Road/Rail level to invert, as: z₀ = NGL − (RL − distance + D/2). Settlement is computed relative to Natural Ground Level, i.e. the actual ground surface, not the Road/Rail formation level — check this is the intended reference surface where NGL and RL differ (e.g. embankment or cutting).</li>
+      <li>Volume loss V<sub>l</sub> is taken as constant along the drive and is a direct user input; it is not derived or predicted by this tool.</li>
+      <li>Ground is treated as reasonably homogeneous between tunnel axis and ground surface. Significant stratification or a shallow stiff/soft interface is not explicitly modelled — engineering judgment on K is needed in such cases.</li>
+      <li>Trough width parameter K is assumed constant with depth and applies to tunnels of moderate to typical cover (z₀ ≳ 1.5–2D). For very shallow tunnels the Gaussian assumption becomes less reliable.</li>
+      <li>For twin tunnels, the combined trough is obtained by simple linear superposition of two independent Gaussian troughs (New &amp; O'Reilly, 1991). This is known to potentially under-estimate settlement over the pillar between closely spaced tunnels (centre-to-centre spacing ≲ 2D) due to soil-arching / stress-redistribution effects between bores; numerical modelling is recommended to verify closely-spaced twin-tunnel cases.</li>
+      <li>Horizontal ground displacement is estimated assuming displacement vectors point towards the tunnel axis (O'Reilly &amp; New, 1982) — this is best supported for cohesive soils; granular soils may not follow this assumption exactly.</li>
+      <li>Output covers vertical settlement, slope, horizontal displacement, and settlement contour distances only. A full Burland/Boscardin-type building-damage classification and serviceability limit checks are outside the scope of this tool.</li>
+      <li>This tool gives a preliminary, greenfield estimate suitable for planning-stage screening. For any structure identified as being within the zone of significant ground movement, a project-specific soil–structure interaction assessment is required.</li>
+    </ul>
+
+    <div class="section-title">References / backup</div>
+    <ol class="refs">
+      <li>Peck, R.B. (1969). "Deep excavations and tunnelling in soft ground." Proc. 7th Int. Conf. on Soil Mechanics and Foundation Engineering, Mexico City, State-of-the-Art Volume, pp. 225–290.</li>
+      <li>O'Reilly, M.P. &amp; New, B.M. (1982). "Settlements above tunnels in the United Kingdom – their magnitude and prediction." Tunnelling '82, IMM, London, pp. 173–181.</li>
+      <li>Attewell, P.B., Yeates, J. &amp; Selby, A.R. (1986). "Soil Movements Induced by Tunnelling and their Effects on Pipelines and Structures." Blackie, Glasgow.</li>
+      <li>New, B.M. &amp; O'Reilly, M.P. (1991). "Tunnelling induced ground movements; predicting their magnitude and effects." 4th Int. Conf. on Ground Movements and Structures, Cardiff.</li>
+      <li>Mair, R.J. &amp; Taylor, R.N. (1997). "Bored tunnelling in the urban environment." State-of-the-Art Report, 14th Int. Conf. on Soil Mechanics and Foundation Engineering, Hamburg.</li>
+    </ol>
+
+  </div>
+</div>
+
+<div class="footer">
+  <b>Method:</b> Empirical transverse Gaussian settlement trough (Peck 1969 / O'Reilly &amp; New 1982). Not tied to IS/Euro/ACI code — this is an internationally-used empirical geotechnical prediction method; refer to project-specific geotechnical baseline report for site parameters.<br>
+  Disclaimer: This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction. This is not a substitute for professional judgment or compliance verification against the applicable project-specific code requirements.
+  <div class="copyright">© Vishal Bansal</div>
+</div>
+
+<script>
+const SQRT2PI = Math.sqrt(2*Math.PI);
+
+function toggleTwin(){
+  const isTwin = document.getElementById('config').value === 'twin';
+  document.getElementById('fieldsetB').style.display = isTwin ? 'block' : 'none';
+  document.getElementById('spacingFieldset').style.display = isTwin ? 'block' : 'none';
+  document.getElementById('legA').textContent = isTwin ? 'Up-line Tunnel — chainage, levels & ground loss' : 'Tunnel — chainage, levels & ground loss';
+}
+
+function readTunnel(suffix){
+  return {
+    chainage: document.getElementById('chainage_'+suffix).value.trim(),
+    NGL: parseFloat(document.getElementById('NGL_'+suffix).value),
+    RL: parseFloat(document.getElementById('RL_'+suffix).value),
+    dist: parseFloat(document.getElementById('dist_'+suffix).value),
+    D: parseFloat(document.getElementById('D_'+suffix).value),
+    Vl: parseFloat(document.getElementById('Vl_'+suffix).value),
+    ground: document.getElementById('soil_'+suffix).value.trim(),
+    K: parseFloat(document.getElementById('K_'+suffix).value)
+  };
+}
+
+function computeZ0(p){
+  // invert level = RL - dist ; axis level = invert + D/2 ; z0 = NGL - axis level
+  const invert = p.RL - p.dist;
+  const axis = invert + p.D/2;
+  return p.NGL - axis;
+}
+
+function derive(p){
+  const i = p.K * p.z0;                                   // m
+  const Vs = (p.Vl/100) * Math.PI * p.D*p.D/4;             // m^2/m
+  const Smax = (Vs/(i*SQRT2PI)) * 1000;                    // mm
+  return {i:i, Smax:Smax, Vs:Vs};
+}
+function S_of(p, d, x){
+  return d.Smax * Math.exp(-(x*x)/(2*d.i*d.i));
+}
+function slope_of(p, d, x){
+  return -(x/(d.i*d.i)) * S_of(p,d,x);
+}
+function Sh_of(p, d, x){
+  return (x/p.z0) * S_of(p,d,x);
+}
+
+let lastState = null;
+
+function calculate(){
+  const config = document.getElementById('config').value;
+  const pA = readTunnel('A');
+  pA.z0 = computeZ0(pA);
+  document.getElementById('z0disp_A').textContent = 'Depth to tunnel axis (calculated): ' + (isFinite(pA.z0)? pA.z0.toFixed(2):'—') + ' m';
+
+  let pB=null, spacing=0;
+  if(config==='twin'){
+    pB = readTunnel('B');
+    pB.z0 = computeZ0(pB);
+    document.getElementById('z0disp_B').textContent = 'Depth to tunnel axis (calculated): ' + (isFinite(pB.z0)? pB.z0.toFixed(2):'—') + ' m';
+    spacing = parseFloat(document.getElementById('spacing').value);
+  }
+
+  const errors = [];
+  if(!isFinite(pA.z0) || pA.z0<=0) errors.push('Up-line tunnel: computed depth to axis is zero or negative — check NGL, RL and invert distance.');
+  if(pB && (!isFinite(pB.z0) || pB.z0<=0)) errors.push('Down-line tunnel: computed depth to axis is zero or negative — check NGL, RL and invert distance.');
+  if(config==='twin' && (!isFinite(spacing) || spacing<=0)) errors.push('Twin tunnel spacing must be a positive number.');
+
+  const errHolder = document.getElementById('errorHolder');
+  if(errors.length){
+    errHolder.innerHTML = `<div class="error-banner">⚠ ${errors.join('<br>⚠ ')}</div>`;
+    document.getElementById('cards').innerHTML='';
+    document.getElementById('chartHolder').innerHTML='';
+    document.getElementById('chartLegend').innerHTML='';
+    document.getElementById('resultsTable').innerHTML='';
+    document.getElementById('contourTable').innerHTML='';
+    document.getElementById('customResult').innerHTML='';
+    document.getElementById('chainageInfo').innerHTML='';
+    return;
+  }
+  errHolder.innerHTML='';
+
+  const dA = derive(pA);
+  const dB = pB ? derive(pB) : null;
+
+  lastState = {config,pA,dA,pB,dB,spacing};
+
+  renderChainage();
+  renderCards();
+  renderChart();
+  renderTable();
+  renderContours();
+  document.getElementById('customResult').innerHTML='';
+}
+
+function renderChainage(){
+  const {config,pA,pB} = lastState;
+  let txt = `Up-line chainage: ${pA.chainage||'—'}`;
+  if(config==='twin') txt += `  |  Down-line chainage: ${pB.chainage||'—'}`;
+  document.getElementById('chainageInfo').textContent = txt;
+}
+
+function cardHTML(label, value, unit){
+  return `<div class="card"><div class="k">${label}</div><div class="v">${value} <small>${unit}</small></div></div>`;
+}
+
+function renderCards(){
+  const {config,pA,dA,pB,dB,spacing} = lastState;
+  let html='';
+  html += cardHTML('z₀ (Up-line)', pA.z0.toFixed(2), 'm');
+  html += cardHTML('i (Up-line)', dA.i.toFixed(2), 'm');
+  html += cardHTML('S_max (Up-line)', dA.Smax.toFixed(2), 'mm');
+  if(config==='twin'){
+    html += cardHTML('z₀ (Down-line)', pB.z0.toFixed(2), 'm');
+    html += cardHTML('i (Down-line)', dB.i.toFixed(2), 'm');
+    html += cardHTML('S_max (Down-line)', dB.Smax.toFixed(2), 'mm');
+    const mid = combinedS(spacing/2);
+    html += cardHTML('S at pillar midpoint', mid.toFixed(2), 'mm');
+    const peak = scanPeakCombined();
+    html += cardHTML('Peak combined settlement', peak.value.toFixed(2), `mm @ x=${peak.x.toFixed(1)}m`);
+  }
+  document.getElementById('cards').innerHTML = html;
+}
+
+function combinedS(x){
+  const {pA,dA,pB,dB,config,spacing} = lastState;
+  let s = S_of(pA,dA,x);
+  if(config==='twin'){
+    s += S_of(pB,dB, x-spacing);
+  }
+  return s;
+}
+function scanDomain(){
+  const xmaxScan = getXmax();
+  const {config,spacing} = lastState;
+  const lo = -xmaxScan;
+  const hi = config==='twin' ? xmaxScan+spacing : xmaxScan;
+  return [lo,hi];
+}
+function scanPeakCombined(){
+  const [lo,hi] = scanDomain();
+  let best={value:-1,x:0};
+  for(let x=lo; x<=hi; x+=0.1){
+    const v=combinedS(x);
+    if(v>best.value){best={value:v,x:x};}
+  }
+  return best;
+}
+
+function getXmax(){
+  const userX = parseFloat(document.getElementById('xmax').value);
+  if(userX && userX>0) return userX;
+  const {dA,dB,config,spacing} = lastState;
+  let base = 3.5*dA.i;
+  if(config==='twin'){
+    base = Math.max(3.5*dA.i, 3.5*dB.i + spacing, spacing + 3.5*Math.max(dA.i,dB.i));
+  }
+  return Math.ceil(base);
+}
+
+function renderTable(){
+  const {config,pA,dA,pB,dB,spacing} = lastState;
+  let rows = '';
+  function rowFor(label,x){
+    const sA = S_of(pA,dA, x);
+    let combined = sA;
+    let extra = '';
+    if(config==='twin'){
+      const sB = S_of(pB,dB, x-spacing);
+      combined = sA+sB;
+      extra = ` (Up:${sA.toFixed(2)} + Down:${sB.toFixed(2)})`;
+    }
+    return `<tr><td>${label}</td><td>${x.toFixed(2)}</td><td>${combined.toFixed(2)}${extra}</td></tr>`;
+  }
+  rows += rowFor('Up-line centreline', 0);
+  rows += rowFor('Point of inflection (x = i, Up-line)', dA.i);
+  rows += rowFor('Edge of trough (x ≈ 2.5·i, Up-line)', 2.5*dA.i);
+  if(config==='twin'){
+    rows += rowFor('Down-line centreline', spacing);
+    rows += rowFor('Pillar midpoint (between Up &amp; Down)', spacing/2);
+    rows += rowFor('Point of inflection (Down-line)', spacing+dB.i);
+  }
+  document.getElementById('resultsTable').innerHTML =
+    `<tr><th>Location</th><th>x from Up-line (m)</th><th>Settlement (mm)</th></tr>${rows}`;
+}
+
+function findCrossings(level, lo, hi, dx){
+  let xs=[];
+  let prevX=lo, prevVal=combinedS(lo)-level;
+  for(let x=lo+dx; x<=hi+1e-9; x+=dx){
+    const val = combinedS(x)-level;
+    if((prevVal<0 && val>=0) || (prevVal>0 && val<=0)){
+      const root = prevX + (x-prevX) * ( -prevVal/(val-prevVal) );
+      xs.push(root);
+    }
+    prevX=x; prevVal=val;
+  }
+  return xs;
+}
+
+function renderContours(){
+  const peak = scanPeakCombined().value;
+  const candidates = [1,2,5,10,15,20,25,30,40,50,75,100];
+  const levels = candidates.filter(l => l < peak*0.999).slice(0,8);
+  const [lo,hi] = scanDomain();
+  let rows='';
+  if(levels.length===0){
+    rows = `<tr><td colspan="2">Peak combined settlement (${peak.toFixed(2)} mm) is below the smallest contour level (1 mm) — no contours to report.</td></tr>`;
+  } else {
+    levels.forEach(lv=>{
+      const xs = findCrossings(lv, lo-2, hi+2, 0.03).sort((a,b)=>a-b);
+      const txt = xs.length ? xs.map(x=>x.toFixed(2)).join(' m ,  ')+' m' : '—';
+      rows += `<tr><td>${lv} mm</td><td>${txt}</td></tr>`;
+    });
+  }
+  document.getElementById('contourTable').innerHTML =
+    `<tr><th>Settlement level</th><th>Offset(s) from Up-line centreline</th></tr>${rows}`;
+}
+
+function computeCustomX(){
+  const x = parseFloat(document.getElementById('customX').value);
+  const {pA,dA,pB,dB,config,spacing} = lastState;
+  const combined = combinedS(x);
+  const slopeA = slope_of(pA,dA,x);
+  const slopeB = config==='twin' ? slope_of(pB,dB,x-spacing) : 0;
+  const slope = slopeA+slopeB;
+  const shA = Sh_of(pA,dA,x);
+  const shB = config==='twin' ? Sh_of(pB,dB,x-spacing) : 0;
+  let html = `<b>x = ${x} m</b> from Up-line centreline &nbsp;→&nbsp; `+
+    `Settlement = <b>${combined.toFixed(2)} mm</b><br>`+
+    `Slope (dS/dx) = ${slope.toFixed(3)} mm/m<br>`+
+    `Approx. horizontal displacement ≈ ${(shA+shB).toFixed(2)} mm (towards nearest axis, O'Reilly &amp; New assumption)`;
+  document.getElementById('customResult').innerHTML = html;
+}
+
+// ---------------- helpers ----------------
+function niceStep(range){
+  const raw = range/4;
+  const pow = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw/pow;
+  let step;
+  if(n<1.5) step=1*pow; else if(n<3.5) step=2*pow; else if(n<7.5) step=5*pow; else step=10*pow;
+  return step;
+}
+
+// ---------------- SVG rendering ----------------
+function renderChart(){
+  const {config,pA,dA,pB,dB,spacing} = lastState;
+  const xmaxScan = getXmax();
+  const W=840, marginL=64, marginR=26;
+  const plotW = W-marginL-marginR;
+
+  function xToPx(x){ return marginL + (x+xmaxScan)/(2*xmaxScan) * plotW; }
+
+  // ---- chart 1 : settlement curve ----
+  const chartTop=26;                 // ground line (settlement = 0)
+  const chartInnerH=190;             // vertical drawing space for settlement
+  const chartBottomY = chartTop+chartInnerH;
+  const xAxisLabelY = chartBottomY+16;
+
+  let maxS = dA.Smax;
+  if(config==='twin') maxS = Math.max(maxS, dB.Smax, scanPeakCombined().value);
+  const sAxisMax = maxS*1.15;
+  const yScale = chartInnerH / sAxisMax;
+
+  const N=160;
+  let ptsA=[], ptsB=[], ptsC=[];
+  for(let n=0;n<=N;n++){
+    const x = -xmaxScan + (2*xmaxScan)*n/N;
+    const sA = S_of(pA,dA,x);
+    ptsA.push([xToPx(x), chartTop + sA*yScale]);
+    if(config==='twin'){
+      const sB = S_of(pB,dB, x-spacing);
+      ptsB.push([xToPx(x), chartTop + sB*yScale]);
+      ptsC.push([xToPx(x), chartTop + (sA+sB)*yScale]);
+    }
+  }
+  function pathOf(pts){ return 'M'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L'); }
+
+  // x ticks (shared across both diagrams)
+  const xStep = niceStep(2*xmaxScan);
+  let xTicks=[];
+  for(let x = Math.ceil(-xmaxScan/xStep)*xStep; x<=xmaxScan+0.001; x+=xStep){ xTicks.push(Math.round(x*100)/100); }
+
+  // y ticks for settlement axis
+  const yStep = niceStep(sAxisMax*2);
+  let yTicks=[];
+  for(let v=0; v<=sAxisMax; v+=yStep){ yTicks.push(Math.round(v*100)/100); }
+
+  let grid1='';
+  xTicks.forEach(x=>{
+    const px=xToPx(x);
+    grid1 += `<line x1="${px}" y1="${chartTop}" x2="${px}" y2="${chartBottomY}" stroke="${x===0?'#B7C4CB':'var(--grid)'}" stroke-width="${x===0?1.2:1}"/>`;
+    grid1 += `<text x="${px}" y="${xAxisLabelY}" font-family="Roboto Mono, monospace" font-size="11" fill="#5A6E78" text-anchor="middle">${x}</text>`;
+  });
+  yTicks.forEach(v=>{
+    const py = chartTop+v*yScale;
+    grid1 += `<line x1="${marginL}" y1="${py}" x2="${W-marginR}" y2="${py}" stroke="var(--grid)" stroke-width="1"/>`;
+    grid1 += `<text x="${marginL-8}" y="${py+3.5}" font-family="Roboto Mono, monospace" font-size="11" fill="#5A6E78" text-anchor="end">${v}</text>`;
+  });
+
+  let curvesSVG = '';
+  if(config==='twin'){
+    curvesSVG += `<path d="${pathOf(ptsA)}" fill="none" stroke="#1B4F72" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.55"/>`;
+    curvesSVG += `<path d="${pathOf(ptsB)}" fill="none" stroke="#3D5A73" stroke-width="1.4" stroke-dasharray="5,3" opacity="0.55"/>`;
+    curvesSVG += `<path d="${pathOf(ptsC)}" fill="none" stroke="#1B4F72" stroke-width="2.6"/>`;
+  } else {
+    curvesSVG += `<path d="${pathOf(ptsA)}" fill="none" stroke="#1B4F72" stroke-width="2.6"/>`;
+  }
+
+  const chartSVG = `
+    ${grid1}
+    <line x1="${marginL}" y1="${chartTop}" x2="${W-marginR}" y2="${chartTop}" stroke="#3D5A73" stroke-width="1.6"/>
+    ${curvesSVG}
+    <text x="${marginL}" y="${chartTop-10}" font-family="Inter, sans-serif" font-size="12.5" font-weight="600" fill="#1B4F72">Ground surface — settlement (mm)</text>
+    <text x="${(marginL+W-marginR)/2}" y="${xAxisLabelY+16}" font-family="Inter, sans-serif" font-size="11.5" fill="#5A6E78" text-anchor="middle">Offset from Up-line tunnel centreline (m)</text>
+  `;
+
+  // ---- chart 2 : cross section ----
+  const sectionTop = xAxisLabelY+34;
+  const sectionInnerH=190;
+  const groundY2 = sectionTop+16;
+  const maxDepth = config==='twin' ? Math.max(pA.z0+pA.D/2, pB.z0+pB.D/2) : pA.z0+pA.D/2;
+  const dAxisMax = maxDepth*1.15;
+  const depthScale = sectionInnerH/dAxisMax;
+  const sectionBottomY = groundY2+sectionInnerH;
+
+  const dStep = niceStep(dAxisMax*2);
+  let dTicks=[];
+  for(let v=0; v<=dAxisMax; v+=dStep){ dTicks.push(Math.round(v*100)/100); }
+
+  let grid2='';
+  xTicks.forEach(x=>{
+    const px=xToPx(x);
+    grid2 += `<line x1="${px}" y1="${groundY2}" x2="${px}" y2="${sectionBottomY}" stroke="${x===0?'#B7C4CB':'var(--grid)'}" stroke-width="${x===0?1.2:1}"/>`;
+  });
+  dTicks.forEach(v=>{
+    const py = groundY2+v*depthScale;
+    grid2 += `<line x1="${marginL}" y1="${py}" x2="${W-marginR}" y2="${py}" stroke="var(--grid)" stroke-width="1"/>`;
+    grid2 += `<text x="${marginL-8}" y="${py+3.5}" font-family="Roboto Mono, monospace" font-size="11" fill="#5A6E78" text-anchor="end">${v}</text>`;
+  });
+
+  function tunnelCircle(p, cx_m, fill, stroke, label){
+    const cx = xToPx(cx_m);
+    const cy = groundY2 + p.z0*depthScale;
+    const r = (p.D/2)*depthScale;
+    return `
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="1.8"/>
+      <line x1="${cx}" y1="${groundY2}" x2="${cx}" y2="${cy}" stroke="${stroke}" stroke-width="1" stroke-dasharray="3,2" opacity="0.6"/>
+      <text x="${cx}" y="${cy-r-8}" font-family="Inter, sans-serif" font-size="12" font-weight="600" fill="${stroke}" text-anchor="middle">${label}</text>
+      <text x="${cx}" y="${cy+4}" font-family="Roboto Mono, monospace" font-size="11" fill="${stroke}" text-anchor="middle">D=${p.D}m</text>
+    `;
+  }
+
+  let sectionSVG = `
+    ${grid2}
+    <line x1="${marginL}" y1="${groundY2}" x2="${W-marginR}" y2="${groundY2}" stroke="#3D5A73" stroke-width="1.6"/>
+    <text x="${marginL}" y="${sectionTop+8}" font-family="Inter, sans-serif" font-size="12.5" font-weight="600" fill="#1B4F72">Tunnel cross-section — depth below NGL (m)</text>
+  `;
+  sectionSVG += tunnelCircle(pA, 0, '#DCE7EC', '#1B4F72', `Up-line, z0=${pA.z0.toFixed(1)}m`);
+  if(config==='twin'){
+    sectionSVG += tunnelCircle(pB, spacing, '#E8EFE4', '#3D5A73', `Down-line, z0=${pB.z0.toFixed(1)}m`);
+    const x1=xToPx(0), x2=xToPx(spacing);
+    const dimY = groundY2 - 8;
+    sectionSVG += `
+      <line x1="${x1}" y1="${dimY}" x2="${x2}" y2="${dimY}" stroke="#5A6E78" stroke-width="1"/>
+      <line x1="${x1}" y1="${dimY-4}" x2="${x1}" y2="${dimY+4}" stroke="#5A6E78"/>
+      <line x1="${x2}" y1="${dimY-4}" x2="${x2}" y2="${dimY+4}" stroke="#5A6E78"/>
+      <text x="${(x1+x2)/2}" y="${dimY-6}" font-size="11.5" font-family="Inter, sans-serif" font-weight="600" text-anchor="middle" fill="#5A6E78">s = ${spacing} m</text>
+    `;
+  }
+  sectionSVG += `<text x="${(marginL+W-marginR)/2}" y="${sectionBottomY+30}" font-family="Inter, sans-serif" font-size="11.5" fill="#5A6E78" text-anchor="middle">Offset from Up-line tunnel centreline (m)</text>`;
+
+  const totalH = sectionBottomY+46;
+
+  const svg = `
+  <svg class="chart" viewBox="0 0 ${W} ${totalH}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="0" y="0" width="${W}" height="${totalH}" fill="#ffffff"/>
+    ${chartSVG}
+    ${sectionSVG}
+  </svg>`;
+  document.getElementById('chartHolder').innerHTML = svg;
+
+  let legend = `<span><span class="legend-swatch" style="background:#1B4F72;height:3px;"></span>${config==='twin'?'Combined trough':'Settlement trough'}</span>`;
+  if(config==='twin'){
+    legend += `<span><span class="legend-swatch" style="background:#1B4F72;opacity:.55;"></span>Up-line individual</span>`;
+    legend += `<span><span class="legend-swatch" style="background:#3D5A73;opacity:.55;"></span>Down-line individual</span>`;
+  }
+  document.getElementById('chartLegend').innerHTML = legend;
+}
+
+window.onload = function(){ calculate(); };
+</script>
+
+</body>
+</html>
