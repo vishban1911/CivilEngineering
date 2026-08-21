@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tool - Segment Handling, Storage, Transport &amp; Erection Checks (ITA / IS 456)</title>
+<style>
+  :root{
+    --input-bg:#FAF8F5;
+    --input-bg-alt:#F5F3EE;
+    --input-accent:#3D5A73;
+    --output-bg:#F0F4F7;
+    --output-accent:#1B4F72;
+    --divider:#D5D0C8;
+    --warn:#D68910;
+    --fail:#B0413E;
+    --pass:#3F7D5C;
+    --ink:#26313A;
+    --muted:#6b7480;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter','Roboto',system-ui,-apple-system,sans-serif;
+    color:var(--ink);
+    background:#EDEAE3;
+  }
+  header.topbar{
+    background:#20303D;
+    color:#F0F4F7;
+    padding:14px 24px;
+    display:flex;
+    flex-wrap:wrap;
+    align-items:baseline;
+    gap:6px 18px;
+    border-bottom:3px solid var(--output-accent);
+  }
+  header.topbar h1{
+    font-size:18px;
+    margin:0;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  header.topbar .code-ref{
+    font-size:12.5px;
+    color:#B9C6CF;
+    font-family:'Roboto Mono',monospace;
+  }
+  header.topbar .disclaimer{
+    width:100%;
+    font-size:11.5px;
+    color:#8FA0AC;
+    line-height:1.4;
+    margin-top:4px;
+    border-top:1px solid #34475A;
+    padding-top:6px;
+  }
+  .layout{
+    display:flex;
+    align-items:flex-start;
+    min-height:calc(100vh - 110px);
+  }
+  aside.inputs{
+    width:38%;
+    min-width:320px;
+    background:var(--input-bg);
+    padding:18px 18px 90px 18px;
+    max-height:calc(100vh - 110px);
+    overflow-y:auto;
+    border-right:2px solid var(--divider);
+    position:sticky;
+    top:0;
+    align-self:flex-start;
+  }
+  main.outputs{
+    width:62%;
+    background:var(--output-bg);
+    padding:20px 26px 60px 26px;
+  }
+  fieldset{
+    border:1px solid var(--divider);
+    background:var(--input-bg-alt);
+    border-radius:3px;
+    margin-bottom:14px;
+    padding:10px 12px 14px 12px;
+  }
+  legend{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--input-accent);
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    padding:0 6px;
+  }
+  .field{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    margin:7px 0;
+  }
+  .field label{
+    font-size:13px;
+    font-weight:500;
+    color:var(--ink);
+    flex:1.4;
+  }
+  .field .hint{
+    display:block;
+    font-size:10.5px;
+    color:var(--muted);
+    font-weight:400;
+    margin-top:1px;
+  }
+  .field input[type=number], .field select{
+    flex:1;
+    max-width:118px;
+    font-family:'Roboto Mono',monospace;
+    font-size:13px;
+    padding:5px 6px;
+    border:1px solid var(--input-accent);
+    border-radius:3px;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field input:focus, .field select:focus{
+    outline:2px solid var(--input-accent);
+    outline-offset:1px;
+  }
+  .field.checkrow{
+    justify-content:flex-start;
+  }
+  .field.checkrow input{max-width:20px;flex:none;margin-right:8px;}
+  .subhead{
+    font-size:11px;
+    font-weight:700;
+    color:var(--input-accent);
+    margin:10px 0 2px 0;
+    border-top:1px dashed var(--divider);
+    padding-top:8px;
+  }
+  select{max-width:118px;}
+  .calc-btn{
+    position:sticky;
+    bottom:10px;
+    width:100%;
+    background:var(--input-accent);
+    color:#fff;
+    border:none;
+    padding:13px;
+    font-size:14.5px;
+    font-weight:700;
+    letter-spacing:.3px;
+    border-radius:4px;
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.25);
+    margin-top:6px;
+  }
+  .calc-btn:hover{background:#2f4759;}
+
+  /* OUTPUT SIDE */
+  h2.check-title{
+    color:var(--output-accent);
+    font-size:16px;
+    margin:0 0 3px 0;
+    border-bottom:2px solid var(--output-accent);
+    padding-bottom:4px;
+  }
+  h2.check-title span.num{
+    font-family:'Roboto Mono',monospace;
+    font-size:12px;
+    background:var(--output-accent);
+    color:#fff;
+    padding:2px 6px;
+    border-radius:3px;
+    margin-right:8px;
+  }
+  .summary-table{
+    width:100%;
+    border-collapse:collapse;
+    margin-bottom:22px;
+    background:#fff;
+    font-size:13px;
+  }
+  .summary-table th,.summary-table td{
+    border:1px solid var(--divider);
+    padding:7px 9px;
+    text-align:center;
+  }
+  .summary-table th{
+    background:var(--output-accent);
+    color:#fff;
+    font-weight:600;
+    font-size:12px;
+  }
+  .summary-table td.num{font-family:'Roboto Mono',monospace;}
+  .status-pill{
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:10px;
+    font-size:11px;
+    font-weight:700;
+    color:#fff;
+  }
+  .status-pass{background:var(--pass);}
+  .status-warn{background:var(--warn);}
+  .status-fail{background:var(--fail);}
+
+  .check-card{
+    background:#fff;
+    border:1px solid var(--divider);
+    border-radius:4px;
+    padding:16px 18px;
+    margin-bottom:26px;
+  }
+  .check-grid{
+    display:flex;
+    gap:20px;
+    flex-wrap:wrap;
+    margin-top:8px;
+  }
+  .sketch-box{
+    flex:1 1 340px;
+    min-width:300px;
+  }
+  .sketch-box svg{width:100%;height:auto;background:var(--output-bg);border:1px solid var(--divider);border-radius:3px;}
+  .calc-box{
+    flex:1 1 300px;
+    min-width:280px;
+    font-size:13px;
+  }
+  .formula{
+    font-family:'Roboto Mono',monospace;
+    background:var(--output-bg);
+    border-left:3px solid var(--output-accent);
+    padding:8px 10px;
+    margin:6px 0;
+    font-size:12.5px;
+    line-height:1.6;
+    white-space:pre-wrap;
+    overflow-x:auto;
+  }
+  .result-line{
+    display:flex;
+    justify-content:space-between;
+    font-family:'Roboto Mono',monospace;
+    font-size:13.5px;
+    padding:3px 0;
+    border-bottom:1px dotted var(--divider);
+  }
+  .result-line b{font-weight:700;}
+  .flag{
+    margin-top:10px;
+    padding:7px 10px;
+    border-radius:3px;
+    font-size:12.5px;
+    font-weight:600;
+  }
+  .flag-pass{background:#E4F1EB;color:var(--pass);border:1px solid var(--pass);}
+  .flag-warn{background:#FBF1DF;color:var(--warn);border:1px solid var(--warn);}
+  .flag-fail{background:#F7E7E6;color:var(--fail);border:1px solid var(--fail);}
+  .assumptions{
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:10px;
+    line-height:1.5;
+  }
+  footer.foot{
+    background:#20303D;
+    color:#8FA0AC;
+    font-size:11.5px;
+    line-height:1.5;
+    padding:16px 24px;
+  }
+  @media (max-width:900px){
+    .layout{flex-direction:column;}
+    aside.inputs, main.outputs{width:100%;}
+    aside.inputs{position:relative;max-height:none;border-right:none;border-bottom:2px solid var(--divider);}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <h1>Tunnel Segment &mdash; Handling, Storage, Transport &amp; Erection Checks</h1>
+  <span class="code-ref">Beam-on-support method per ITA / ITAtech guidance for precast segmental lining &nbsp;|&nbsp; Reinforcement design: IS 456:2000</span>
+  <div class="disclaimer">Disclaimer: This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction. This is not a substitute for professional judgment or compliance verification against the applicable project-specific code requirements. The beam-on-support idealisation follows common ITA/ITAtech practice for segment handling checks; site-specific dynamic factors, support layout and packer tolerances should be confirmed against the project's segment handling manual.</div>
+</header>
+
+<div class="layout">
+<aside class="inputs" id="inputsPanel">
+
+  <fieldset>
+    <legend>Segment geometry</legend>
+    <div class="field">
+      <label>Effective span length, L<span class="hint">chord length between segment ends (conservative); use arc length if segment is nearly flat</span></label>
+      <input type="number" id="L" value="1.50" step="0.01">
+      <span style="font-size:11px;color:var(--muted);margin-left:4px;">m</span>
+    </div>
+    <div class="field">
+      <label>Segment width (circumferential), B<span class="hint">reference only &mdash; checks below are per 1 m width strip</span></label>
+      <input type="number" id="B" value="1.20" step="0.01">
+      <span style="font-size:11px;color:var(--muted);margin-left:4px;">m</span>
+    </div>
+    <div class="field">
+      <label>Thickness, t</label>
+      <input type="number" id="t" value="350" step="5">
+      <span style="font-size:11px;color:var(--muted);margin-left:4px;">mm</span>
+    </div>
+    <div class="field">
+      <label>Unit weight of concrete, &gamma;c</label>
+      <input type="number" id="gamma" value="25" step="0.5">
+      <span style="font-size:11px;color:var(--muted);margin-left:4px;">kN/m&sup3;</span>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Concrete &amp; reinforcement (IS 456:2000)</legend>
+    <div class="field">
+      <label>Concrete grade, fck</label>
+      <select id="fck">
+        <option value="25">M25</option>
+        <option value="30" selected>M30</option>
+        <option value="35">M35</option>
+        <option value="40">M40</option>
+        <option value="45">M45</option>
+        <option value="50">M50</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Steel grade, fy</label>
+      <select id="fy">
+        <option value="250">Fe250</option>
+        <option value="415">Fe415</option>
+        <option value="500" selected>Fe500</option>
+        <option value="550">Fe550</option>
+      </select>
+    </div>
+    <div class="subhead">Layer 1 (e.g. Extrados / outer curved face)</div>
+    <div class="field"><label>Cover to Layer 1</label><input type="number" id="cov1" value="40"><span style="font-size:11px;color:var(--muted);margin-left:4px;">mm</span></div>
+    <div class="field"><label>Bar dia., Layer 1</label><input type="number" id="dia1" value="12"><span style="font-size:11px;color:var(--muted);margin-left:4px;">mm</span></div>
+    <div class="field"><label>Spacing, Layer 1</label><input type="number" id="sp1" value="150"><span style="font-size:11px;color:var(--muted);margin-left:4px;">mm c/c</span></div>
+    <div class="subhead">Layer 2 (e.g. Intrados / inner curved face)</div>
+    <div class="field"><label>Cover to Layer 2</label><input type="number" id="cov2" value="35"><span style="font-size:11px;color:var(--muted);margin-left:4px;">mm</span></div>
+    <div class="field"><label>Bar dia., Layer 2</label><input type="number" id="dia2" value="12"><span style="font-size:11px;color:var(--muted);margin-left:4px;">mm</span></div>
+    <div class="field"><label>Spacing, Layer 2</label><input type="number" id="sp2" value="150"><span style="font-size:11px;color:var(--muted);margin-left:4px;">mm c/c</span></div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Concrete strength gain by stage (ITA/ITAtech)</legend>
+    <div style="font-size:11.5px;color:var(--muted);margin-bottom:6px;">Precast segments are handled well before 28-day strength. Enter the actual concrete strength verified at each stage (from mix design/cube records) below &mdash; or tick the box to auto-estimate it from age using the Eurocode&nbsp;2/CEB-FIP maturity model, commonly referenced in ITA/ITAtech early-age handling guidance since IS&nbsp;456 does not itself define a strength-gain-with-age formula.</div>
+    <div class="field checkrow">
+      <input type="checkbox" id="autoStrength">
+      <label>Auto-estimate f<sub>ci</sub> from age (overrides manual entries below)</label>
+    </div>
+    <div class="field">
+      <label>Cement/mix coefficient, s<span class="hint">controls how fast strength develops; precast mixes are usually rapid-hardening</span></label>
+      <select id="cementS">
+        <option value="0.20" selected>Rapid-hardening, high early strength (s=0.20)</option>
+        <option value="0.25">Normal Portland cement (s=0.25)</option>
+        <option value="0.38">Slow-hardening cement (s=0.38)</option>
+      </select>
+    </div>
+    <div class="formula" style="margin-top:8px;">Maturity model (Eurocode 2 &sect;3.1.2 / CEB-FIP):
+  f&#7522;&#7580;(t) = &beta;cc(t) &middot; fck ,  capped at fck
+  &beta;cc(t) = exp{ s &middot; [1 &minus; &radic;(28/t)] } ,  t in days</div>
+  </fieldset>
+
+  <fieldset>
+    <legend>1&middot; Demoulding (stripping)</legend>
+    <div class="field"><label>Concrete strength at demoulding, f<sub>ci,1</sub></label><input type="number" id="fci1" value="15" step="0.5"><span style="font-size:11px;color:var(--muted);margin-left:4px;">N/mm&sup2;</span></div>
+    <div class="field"><label>Age at demoulding (auto-fill only)</label><input type="number" id="age1" value="0.5" step="0.05" disabled><span style="font-size:11px;color:var(--muted);margin-left:4px;">days</span></div>
+    <div class="field"><label>Support/lift point from each end, a1<span class="hint">optimum &asymp; 0.207&middot;L balances hogging &amp; sagging</span></label><input type="number" id="a1" value="0.31" step="0.01"><span style="font-size:11px;color:var(--muted);margin-left:4px;">m</span></div>
+    <div class="field"><label>Dynamic factor, &psi;1</label><input type="number" id="psi1" value="1.2" step="0.05"></div>
+    <div class="field"><label>Face up during this phase</label>
+      <select id="orient1"><option value="1">Layer 1 up</option><option value="2">Layer 2 up</option></select>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>2&middot; Storage (stacking)</legend>
+    <div class="field"><label>Concrete strength at storage, f<sub>ci,2</sub></label><input type="number" id="fci2" value="21" step="0.5"><span style="font-size:11px;color:var(--muted);margin-left:4px;">N/mm&sup2;</span></div>
+    <div class="field"><label>Age at storage (auto-fill only)</label><input type="number" id="age2" value="3" step="0.5" disabled><span style="font-size:11px;color:var(--muted);margin-left:4px;">days</span></div>
+    <div class="field"><label>Packer position from each end, a2</label><input type="number" id="a2" value="0.31" step="0.01"><span style="font-size:11px;color:var(--muted);margin-left:4px;">m</span></div>
+    <div class="field"><label>No. of segments in stack, N<span class="hint">including the segment being checked (bottom-most, worst case)</span></label><input type="number" id="N" value="8" step="1"></div>
+    <div class="field"><label>Packer misalignment tolerance, e</label><input type="number" id="ecc" value="10" step="1"><span style="font-size:11px;color:var(--muted);margin-left:4px;">mm</span></div>
+    <div class="field"><label>Dynamic factor, &psi;2</label><input type="number" id="psi2" value="1.0" step="0.05"></div>
+    <div class="field"><label>Face up during this phase</label>
+      <select id="orient2"><option value="1">Layer 1 up</option><option value="2">Layer 2 up</option></select>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>3&middot; Transportation</legend>
+    <div class="field"><label>Concrete strength at transport, f<sub>ci,3</sub></label><input type="number" id="fci3" value="25.5" step="0.5"><span style="font-size:11px;color:var(--muted);margin-left:4px;">N/mm&sup2;</span></div>
+    <div class="field"><label>Age at transport (auto-fill only)</label><input type="number" id="age3" value="7" step="0.5" disabled><span style="font-size:11px;color:var(--muted);margin-left:4px;">days</span></div>
+    <div class="field"><label>Cradle/support position from each end, a3</label><input type="number" id="a3" value="0.31" step="0.01"><span style="font-size:11px;color:var(--muted);margin-left:4px;">m</span></div>
+    <div class="field"><label>Dynamic factor, &psi;3<span class="hint">typical 1.4&ndash;2.0 depending on route/road condition</span></label><input type="number" id="psi3" value="1.5" step="0.05"></div>
+    <div class="field"><label>Face up during this phase</label>
+      <select id="orient3"><option value="1">Layer 1 up</option><option value="2">Layer 2 up</option></select>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>4&middot; Erection (segment handling in-tunnel)</legend>
+    <div class="field"><label>Concrete strength at erection, f<sub>ci,4</sub></label><input type="number" id="fci4" value="30" step="0.5"><span style="font-size:11px;color:var(--muted);margin-left:4px;">N/mm&sup2;</span></div>
+    <div class="field"><label>Age at erection (auto-fill only)</label><input type="number" id="age4" value="28" step="1" disabled><span style="font-size:11px;color:var(--muted);margin-left:4px;">days</span></div>
+    <div class="field"><label>Lift/support position from each end, a4</label><input type="number" id="a4" value="0.31" step="0.01"><span style="font-size:11px;color:var(--muted);margin-left:4px;">m</span></div>
+    <div class="field"><label>Dynamic factor, &psi;4</label><input type="number" id="psi4" value="1.3" step="0.05"></div>
+    <div class="field"><label>Face up during this phase</label>
+      <select id="orient4"><option value="1">Layer 1 up</option><option value="2">Layer 2 up</option></select>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Design option</legend>
+    <div class="field checkrow">
+      <input type="checkbox" id="applyGF" checked>
+      <label>Apply IS 456 partial load factor &gamma;f = 1.5 (ultimate limit state) on top of the handling dynamic factor</label>
+    </div>
+  </fieldset>
+
+  <button class="calc-btn" id="calcBtn">Calculate all checks &#9656;</button>
+</aside>
+
+<main class="outputs" id="outputsPanel">
+  <div id="summary"></div>
+  <div id="checks"></div>
+</main>
+</div>
+
+<footer class="foot">
+  Civil / Tunnel Tools Suite &mdash; tool-segment-handling.html &nbsp;|&nbsp; Method: two-point support beam idealisation (ITA/ITAtech handling guidance) &nbsp;|&nbsp; Reinforcement capacity: IS 456:2000, Annex G (Limit State of Collapse &ndash; Flexure)<br>
+  Disclaimer: This tool is provided for preliminary and educational use only. Results should be independently verified by a qualified engineer before use in design or construction.
+</footer>
+
+<script>
+// ---------- constants ----------
+function xuMaxRatio(fy){
+  if(fy<=250) return 0.53;
+  if(fy<=415) return 0.48;
+  if(fy<=500) return 0.46;
+  return 0.44; // Fe550
+}
+function fmt(x,d){ if(x===undefined||isNaN(x)) return "&mdash;"; return Number(x).toFixed(d===undefined?2:d); }
+function num(id){ return parseFloat(document.getElementById(id).value); }
+
+// ---------- beam mechanics: two symmetric overhangs, UDL w over full length L, supports at 'a' from each end ----------
+function beamMoments(w, L, a){
+  // w: kN/m (per 1m width strip), L,a: m
+  const Msupport = w*a*a/2;                    // hogging at support (kNm/m)
+  const Mmid = (w/8)*L*(L-4*a);                 // sagging at midspan (kNm/m) - can be negative if a large
+  return {Msupport:Msupport, Mmid:Mmid};
+}
+
+// ---------- IS456 Annex-G flexural capacity per 1m width strip ----------
+function capacity(fck, fy, dia, spacing, cover, t_mm){
+  const b=1000; // mm, per metre width
+  const Ast = (Math.PI/4*dia*dia) * (1000/spacing); // mm2/m
+  const d = t_mm - cover - dia/2; // mm
+  const xuMaxByD = xuMaxRatio(fy);
+  const xu = (0.87*fy*Ast)/(0.36*fck*b); // mm
+  const xuMax = xuMaxByD*d;
+  let Mu, overReinforced=false;
+  if(xu<=xuMax){
+    Mu = 0.87*fy*Ast*d*(1-(Ast*fy)/(b*d*fck)); // N-mm equivalent (per m width), b=1000
+  } else {
+    overReinforced=true;
+    Mu = 0.36*xuMaxByD*(1-0.42*xuMaxByD)*fck*b*d*d;
+  }
+  const MuKNm = Mu/1e6; // kNm/m
+  const AstMin = 0.85*b*d/fy; // mm2/m, IS456 Cl 26.5.1.1
+  return {Ast:Ast, d:d, xu:xu, xuMax:xuMax, Mu:MuKNm, overReinforced:overReinforced, AstMin:AstMin, xuMaxByD:xuMaxByD};
+}
+
+// ---------- concrete strength gain (Eurocode 2 / CEB-FIP maturity model) ----------
+function betaCC(s,t){
+  t = Math.max(t,0.05); // guard against t=0
+  return Math.exp(s*(1-Math.sqrt(28/t)));
+}
+function updateAutoStrengths(){
+  const on = document.getElementById('autoStrength').checked;
+  ['1','2','3','4'].forEach(i=>{
+    document.getElementById('age'+i).disabled = !on;
+    document.getElementById('fci'+i).disabled = on;
+  });
+  if(!on) return;
+  const fck = num('fck'), s = num('cementS');
+  ['1','2','3','4'].forEach(i=>{
+    const t = num('age'+i);
+    const fci = Math.min(fck*betaCC(s,t), fck);
+    document.getElementById('fci'+i).value = fci.toFixed(1);
+  });
+}
+document.getElementById('autoStrength').addEventListener('change', updateAutoStrengths);
+document.getElementById('cementS').addEventListener('change', updateAutoStrengths);
+document.getElementById('fck').addEventListener('change', updateAutoStrengths);
+['age1','age2','age3','age4'].forEach(id=>document.getElementById(id).addEventListener('input', updateAutoStrengths));
+
+function statusPill(ratio){
+  if(ratio<=1.0) return {cls:'status-pass', txt:'OK'};
+  if(ratio<=1.15) return {cls:'status-warn', txt:'MARGINAL'};
+  return {cls:'status-fail', txt:'EXCEEDS'};
+}
+function flagBox(ratio, capLabel){
+  const r = statusPill(ratio);
+  const cls = r.cls==='status-pass' ? 'flag-pass' : (r.cls==='status-warn' ? 'flag-warn':'flag-fail');
+  const word = r.cls==='status-pass' ? 'PASS' : (r.cls==='status-warn' ? 'MARGINAL' : 'FAIL');
+  return '<div class="flag '+cls+'">'+word+' &mdash; utilisation '+fmt(ratio*100,0)+'% of '+capLabel+' capacity</div>';
+}
+
+// ---------- sketches ----------
+function sketchLift(a1v, L1, label1, label2){
+  return `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg">
+    <text x="200" y="16" text-anchor="middle" font-size="11" fill="#1B4F72" font-family="Inter,sans-serif" font-weight="600">Two-point lift / support &mdash; ${label1}</text>
+    <line x1="30" y1="90" x2="370" y2="90" stroke="#1B4F72" stroke-width="10" stroke-linecap="round"/>
+    <line x1="90" y1="60" x2="90" y2="90" stroke="#3D5A73" stroke-width="3"/>
+    <line x1="310" y1="60" x2="310" y2="90" stroke="#3D5A73" stroke-width="3"/>
+    <path d="M78,58 L102,58 L96,48 L84,48 Z" fill="#3D5A73"/>
+    <path d="M298,58 L322,58 L316,48 L304,48 Z" fill="#3D5A73"/>
+    <text x="90" y="42" text-anchor="middle" font-size="9" fill="#3D5A73">lift/support pt.</text>
+    <text x="310" y="42" text-anchor="middle" font-size="9" fill="#3D5A73">lift/support pt.</text>
+    ${[50,70,110,140,170,200,230,260,290,330,350].map(x=>`<line x1="${x}" y1="80" x2="${x}" y2="90" stroke="#6b7480" stroke-width="1.4"><title>w</title></line><line x1="${x}" y1="80" x2="${x-3}" y2="86" stroke="#6b7480" stroke-width="1"/>`).join('')}
+    <text x="200" y="72" text-anchor="middle" font-size="9" fill="#6b7480">self-weight UDL, w</text>
+    <line x1="30" y1="115" x2="90" y2="115" stroke="#B0413E" stroke-width="1"/>
+    <line x1="30" y1="110" x2="30" y2="120" stroke="#B0413E" stroke-width="1"/>
+    <line x1="90" y1="110" x2="90" y2="120" stroke="#B0413E" stroke-width="1"/>
+    <text x="60" y="128" text-anchor="middle" font-size="10" fill="#B0413E" font-family="Roboto Mono, monospace">a = ${fmt(a1v,2)} m</text>
+    <line x1="310" y1="115" x2="370" y2="115" stroke="#B0413E" stroke-width="1"/>
+    <line x1="310" y1="110" x2="310" y2="120" stroke="#B0413E" stroke-width="1"/>
+    <line x1="370" y1="110" x2="370" y2="120" stroke="#B0413E" stroke-width="1"/>
+    <text x="340" y="128" text-anchor="middle" font-size="10" fill="#B0413E" font-family="Roboto Mono, monospace">a = ${fmt(a1v,2)} m</text>
+    <line x1="30" y1="150" x2="370" y2="150" stroke="#1B4F72" stroke-width="1"/>
+    <line x1="30" y1="145" x2="30" y2="155" stroke="#1B4F72" stroke-width="1"/>
+    <line x1="370" y1="145" x2="370" y2="155" stroke="#1B4F72" stroke-width="1"/>
+    <text x="200" y="168" text-anchor="middle" font-size="10" fill="#1B4F72" font-family="Roboto Mono, monospace">L = ${fmt(L1,2)} m</text>
+    <text x="200" y="184" text-anchor="middle" font-size="9" fill="#6b7480">${label2}</text>
+  </svg>`;
+}
+function sketchBMD(){
+  return `<svg viewBox="0 0 400 130" xmlns="http://www.w3.org/2000/svg">
+    <text x="200" y="14" text-anchor="middle" font-size="11" fill="#1B4F72" font-family="Inter,sans-serif" font-weight="600">Bending moment diagram (schematic)</text>
+    <line x1="30" y1="60" x2="370" y2="60" stroke="#6b7480" stroke-width="1" stroke-dasharray="3,2"/>
+    <path d="M30,60 C55,60 65,95 90,95 C160,95 170,30 200,30 C230,30 240,95 310,95 C335,95 345,60 370,60"
+      fill="none" stroke="#1B4F72" stroke-width="2"/>
+    <path d="M30,60 C55,60 65,95 90,95 L90,60 Z" fill="#B0413E" opacity="0.18"/>
+    <path d="M310,95 C335,95 345,60 370,60 L370,60 L310,60 Z" fill="#B0413E" opacity="0.18"/>
+    <path d="M90,60 C160,30 240,30 310,60 L310,95 C240,95 160,95 90,95 Z" fill="#3F7D5C" opacity="0.12"/>
+    <text x="90" y="108" text-anchor="middle" font-size="9" fill="#B0413E">hogging (M support)</text>
+    <text x="200" y="45" text-anchor="middle" font-size="9" fill="#3F7D5C">sagging (M mid)</text>
+  </svg>`;
+}
+function sketchStorage(N,e){
+  let rows='';
+  const n = Math.min(Math.max(Math.round(N),2),6);
+  for(let i=0;i<n;i++){
+    const y = 130 - i*20;
+    const dx = (i%2===0)? 0 : Math.min(e*1.2,8);
+    rows += `<rect x="${60+dx}" y="${y-14}" width="280" height="12" fill="${i===0?'#1B4F72':'#3D5A73'}" opacity="${i===0?1:0.55+0.05*i}"/>`;
+    rows += `<rect x="${95+dx}" y="${y-2}" width="10" height="8" fill="#D68910"/>`;
+    rows += `<rect x="${295+dx}" y="${y-2}" width="10" height="8" fill="#D68910"/>`;
+  }
+  return `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg">
+    <text x="200" y="16" text-anchor="middle" font-size="11" fill="#1B4F72" font-family="Inter,sans-serif" font-weight="600">Stack on packers &mdash; bottom segment checked</text>
+    ${rows}
+    <line x1="60" y1="150" x2="340" y2="150" stroke="#26313A" stroke-width="2"/>
+    <text x="200" y="168" text-anchor="middle" font-size="9" fill="#6b7480">ground / lowest bearer line</text>
+    <text x="360" y="60" font-size="9" fill="#D68910" text-anchor="end">packers</text>
+    <text x="200" y="184" text-anchor="middle" font-size="9" fill="#B0413E">alternating offset shows packer misalignment, e = ${fmt(e,0)} mm (worst case)</text>
+  </svg>`;
+}
+function sketchTransport(a3v,L3){
+  return `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg">
+    <text x="200" y="16" text-anchor="middle" font-size="11" fill="#1B4F72" font-family="Inter,sans-serif" font-weight="600">Segment on transport cradle</text>
+    <line x1="30" y1="90" x2="370" y2="90" stroke="#1B4F72" stroke-width="10" stroke-linecap="round"/>
+    <rect x="75" y="90" width="30" height="16" fill="#D68910"/>
+    <rect x="295" y="90" width="30" height="16" fill="#D68910"/>
+    <line x1="20" y1="120" x2="380" y2="120" stroke="#26313A" stroke-width="3"/>
+    <circle cx="70" cy="132" r="9" fill="#26313A"/><circle cx="130" cy="132" r="9" fill="#26313A"/>
+    <circle cx="270" cy="132" r="9" fill="#26313A"/><circle cx="330" cy="132" r="9" fill="#26313A"/>
+    <path d="M40,150 q10,-8 20,0 t20,0 t20,0" stroke="#3D5A73" fill="none" stroke-width="1.4"/>
+    <path d="M300,150 q10,-8 20,0 t20,0 t20,0" stroke="#3D5A73" fill="none" stroke-width="1.4"/>
+    <text x="200" y="150" text-anchor="middle" font-size="9" fill="#6b7480">road &mdash; dynamic/vibration effects &#8594; &psi;3</text>
+    <text x="90" y="82" text-anchor="middle" font-size="9" fill="#3D5A73">cradle, a = ${fmt(a3v,2)} m</text>
+    <text x="310" y="82" text-anchor="middle" font-size="9" fill="#3D5A73">cradle, a = ${fmt(a3v,2)} m</text>
+    <text x="200" y="180" text-anchor="middle" font-size="9" fill="#6b7480">L = ${fmt(L3,2)} m</text>
+  </svg>`;
+}
+function sketchSection(t_mm, cov1v,dia1v,sp1v, cov2v,dia2v,sp2v, orient){
+  const label1 = orient==='1' ? 'Layer 1 (UP this phase)' : 'Layer 1';
+  const label2 = orient==='2' ? 'Layer 2 (UP this phase)' : 'Layer 2';
+  return `<svg viewBox="0 0 400 190" xmlns="http://www.w3.org/2000/svg">
+    <text x="200" y="16" text-anchor="middle" font-size="11" fill="#1B4F72" font-family="Inter,sans-serif" font-weight="600">Section &amp; reinforcement layers (per 1 m width strip)</text>
+    <rect x="90" y="35" width="220" height="110" fill="none" stroke="#1B4F72" stroke-width="2"/>
+    ${Array.from({length:9}).map((_,i)=>`<circle cx="${100+i*25}" cy="48" r="4" fill="${orient==='1'?'#B0413E':'#3D5A73'}"/>`).join('')}
+    ${Array.from({length:9}).map((_,i)=>`<circle cx="${100+i*25}" cy="132" r="4" fill="${orient==='2'?'#B0413E':'#3D5A73'}"/>`).join('')}
+    <text x="330" y="52" font-size="9" fill="#26313A">${label1}</text>
+    <text x="330" y="136" font-size="9" fill="#26313A">${label2}</text>
+    <text x="70" y="90" text-anchor="end" font-size="10" fill="#6b7480" font-family="Roboto Mono, monospace">t=${fmt(t_mm,0)}</text>
+    <line x1="60" y1="35" x2="60" y2="145" stroke="#6b7480" stroke-width="1"/>
+    <line x1="55" y1="35" x2="65" y2="35" stroke="#6b7480" stroke-width="1"/>
+    <line x1="55" y1="145" x2="65" y2="145" stroke="#6b7480" stroke-width="1"/>
+    <text x="200" y="165" text-anchor="middle" font-size="9" fill="#6b7480">cov1=${fmt(cov1v,0)}mm, &#8709;${fmt(dia1v,0)}@${fmt(sp1v,0)}c/c &nbsp;|&nbsp; cov2=${fmt(cov2v,0)}mm, &#8709;${fmt(dia2v,0)}@${fmt(sp2v,0)}c/c</text>
+    <text x="200" y="180" text-anchor="middle" font-size="9" fill="#B0413E">red = tension face resisted in this phase's governing check</text>
+  </svg>`;
+}
+
+// ---------- one check builder ----------
+function buildCheck(idx, title, methodNote, sketchHTML, w, L, a, psi, orientLabel, capTop, capBottom, gf, eccMomentSupport, fciStage){
+  eccMomentSupport = eccMomentSupport || 0;
+  const bm = beamMoments(w, L, a);
+  const Msupport_service = psi*bm.Msupport + eccMomentSupport;
+  const Mmid_service = psi*bm.Mmid;
+  const Msupport_design = gf ? Msupport_service*1.5 : Msupport_service;
+  const Mmid_design = gf ? Mmid_service*1.5 : Mmid_service;
+
+  const ratioSupport = Msupport_design / capTop.Mu;
+  const ratioMid = Mmid_design>0 ? (Mmid_design/capBottom.Mu) : 0;
+
+  const govMoment = Math.max(Msupport_design, Mmid_design);
+  const govRatio = Math.max(ratioSupport, ratioMid>0?ratioMid:0);
+  const st = statusPill(govRatio);
+  const govIsSupport = ratioSupport>=ratioMid;
+  const govCap = govIsSupport?capTop:capBottom;
+
+  let html = `<div class="check-card">
+    <h2 class="check-title"><span class="num">${idx}</span>${title}</h2>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">${methodNote}</div>
+    <div class="check-grid">
+      <div class="sketch-box">${sketchHTML}${sketchBMD()}</div>
+      <div class="calc-box">
+        <div class="formula">Applied moment (beam-on-support, ITA/ITAtech):
+  M_support = w &middot; a&sup2; / 2   (hogging, at lift/support pt.)
+  M_mid = (w/8) &middot; L &middot; (L &minus; 4a)   (sagging, at midspan)
+  M_design = &gamma;f &middot; [ &psi; &middot; M(service) (+ M_ecc if applicable) ]
+
+Section moment capacity (IS 456:2000, Annex G-1.1):
+  x_u = 0.87&middot;fy&middot;Ast / (0.36&middot;fci&middot;b)
+  if x_u &le; x_u,max&middot;d :
+    Mu = 0.87&middot;fy&middot;Ast&middot;d&middot;[1 &minus; (Ast&middot;fy)/(b&middot;d&middot;fci)]
+  else (over-reinforced, capped):
+    Mu = 0.36&middot;(x_u,max/d)&middot;[1&minus;0.42&middot;(x_u,max/d)]&middot;fci&middot;b&middot;d&sup2;
+  using concrete strength at THIS stage, fci = ${fmt(fciStage,1)} N/mm&sup2; (not 28-day fck)</div>
+        <div class="result-line"><span>Self-weight UDL, w = &gamma;c &middot; t</span><b>${fmt(w,2)} kN/m</b></div>
+        <div class="result-line"><span>M_support (unfactored, &times; &psi;)</span><b>${fmt(psi*bm.Msupport,2)} kNm/m</b></div>
+        ${eccMomentSupport>0 ? `<div class="result-line"><span>+ M_ecc (packer misalignment)</span><b>${fmt(eccMomentSupport,2)} kNm/m</b></div>` : ``}
+        <div class="result-line"><span>M_mid (unfactored, &times; &psi;)</span><b>${fmt(psi*bm.Mmid,2)} kNm/m</b></div>
+        <div class="result-line"><span>Governing design moment, M*</span><b>${fmt(govMoment,2)} kNm/m</b></div>
+        <div class="result-line"><span>Concrete strength used, fci (this stage)</span><b>${fmt(fciStage,1)} N/mm&sup2;</b></div>
+        <div class="result-line"><span>Ast provided (governing face)</span><b>${fmt(govCap.Ast,0)} mm&sup2;/m</b></div>
+        <div class="result-line"><span>d (governing face)</span><b>${fmt(govCap.d,0)} mm</b></div>
+        <div class="result-line"><span>x_u / x_u,max&middot;d</span><b>${fmt(govCap.xu,1)} / ${fmt(govCap.xuMax,1)} mm</b></div>
+        <div class="result-line"><span>Section moment capacity, Mu (governing face)</span><b>${fmt(govCap.Mu,2)} kNm/m</b></div>
+        ${flagBox(govRatio, 'flexural')}
+        <div class="assumptions">Orientation this phase: ${orientLabel}. Hogging at support checked against tension steel on the top (up) face; sagging at midspan checked against tension steel on the bottom (down) face.
+        ${capTop.overReinforced?'<br>&#9888; Layer resisting hogging is over-reinforced (x<sub>u</sub> &gt; x<sub>u,max</sub>) &mdash; capacity capped at M<sub>u,lim</sub>.':''}
+        ${capBottom.overReinforced?'<br>&#9888; Layer resisting sagging is over-reinforced (x<sub>u</sub> &gt; x<sub>u,max</sub>) &mdash; capacity capped at M<sub>u,lim</sub>.':''}
+        ${govCap.Ast<govCap.AstMin?'<br>&#9888; Provided Ast on governing face ('+fmt(govCap.Ast,0)+' mm&sup2;/m) is below IS 456 Cl 26.5.1.1 minimum ('+fmt(govCap.AstMin,0)+' mm&sup2;/m).':''}
+        </div>
+      </div>
+    </div>
+  </div>`;
+  return {html:html, govRatio:govRatio, govMoment:govMoment, status:st};
+}
+
+// ---------- main calculate ----------
+function calculate(){
+  const L=num('L'), B=num('B'), t=num('t'), gamma=num('gamma');
+  const fck=num('fck'), fy=num('fy');
+  const cov1=num('cov1'), dia1=num('dia1'), sp1=num('sp1');
+  const cov2=num('cov2'), dia2=num('dia2'), sp2=num('sp2');
+  const applyGF = document.getElementById('applyGF').checked;
+
+  const w = gamma * (t/1000); // kN/m per 1m width strip
+
+  // per-stage concrete strengths (manual entry, or auto-filled from age if toggle is on)
+  const fci1=num('fci1'), fci2=num('fci2'), fci3=num('fci3'), fci4=num('fci4');
+
+  function capsAtStage(fciStage, orientId){
+    const capA = capacity(fciStage,fy,dia1,sp1,cov1,t); // layer 1 at this stage's strength
+    const capB = capacity(fciStage,fy,dia2,sp2,cov2,t); // layer 2 at this stage's strength
+    return orientId==='1' ? {top:capA, bottom:capB} : {top:capB, bottom:capA};
+  }
+
+  const sectionSketchFor = (orient)=> sketchSection(t,cov1,dia1,sp1,cov2,dia2,sp2,orient);
+
+  // Case 1: Demoulding
+  const a1=num('a1'), psi1=num('psi1'), or1=document.getElementById('orient1').value;
+  const c1 = capsAtStage(fci1, or1);
+  const r1 = buildCheck(1,'Demoulding (stripping from mould)',
+    'Segment lifted by vacuum lifter / lifting inserts at two symmetric points immediately after casting; modelled as a beam with two overhangs under self-weight, amplified by dynamic factor &psi;1. Checked against early-age concrete strength, not 28-day fck.',
+    sketchLift(a1,L,'Demoulding','Vacuum lifter pick points')+sectionSketchFor(or1),
+    w, L, a1, psi1, (or1==='1'?'Layer 1 up':'Layer 2 up'),
+    c1.top, c1.bottom, applyGF, 0, fci1);
+
+  // Case 2: Storage
+  const a2=num('a2'), N=num('N'), ecc=num('ecc')/1000, psi2=num('psi2'), or2=document.getElementById('orient2').value;
+  const c2 = capsAtStage(fci2, or2);
+  const Pabove = Math.max(N-1,0)*w*L/2; // kN per support, per m width
+  const Mecc = Pabove*ecc; // kNm/m
+  const r2 = buildCheck(2,'Storage (stacking on packers)',
+    'Segment stacked N-high on timber packers near the ends; own self-weight bending combined with an eccentric moment at the packer from stack misalignment tolerance e. Load from segments above transmits as point loads through aligned packers (no added span moment) except for the misalignment eccentricity.',
+    sketchStorage(N,ecc*1000)+sectionSketchFor(or2),
+    w, L, a2, psi2, (or2==='1'?'Layer 1 up':'Layer 2 up'),
+    c2.top, c2.bottom, applyGF, Mecc, fci2);
+
+  // Case 3: Transport
+  const a3=num('a3'), psi3=num('psi3'), or3=document.getElementById('orient3').value;
+  const c3 = capsAtStage(fci3, or3);
+  const r3 = buildCheck(3,'Transportation',
+    'Segment supported on two cradles/bolsters on the transport vehicle; road-induced vibration and shock represented by dynamic factor &psi;3 applied to the self-weight beam moments.',
+    sketchTransport(a3,L)+sectionSketchFor(or3),
+    w, L, a3, psi3, (or3==='1'?'Layer 1 up':'Layer 2 up'),
+    c3.top, c3.bottom, applyGF, 0, fci3);
+
+  // Case 4: Erection
+  const a4=num('a4'), psi4=num('psi4'), or4=document.getElementById('orient4').value;
+  const c4 = capsAtStage(fci4, or4);
+  const r4 = buildCheck(4,'Erection (in-tunnel handling by erector)',
+    'Segment lifted from the transport/stack and placed by the segment erector (vacuum pads / mechanical grips), typically tilted or rotated during placement; represented conservatively by the same two-point overhang beam model with dynamic factor &psi;4.',
+    sketchLift(a4,L,'Erection','Erector vacuum pad / grip points')+sectionSketchFor(or4),
+    w, L, a4, psi4, (or4==='1'?'Layer 1 up':'Layer 2 up'),
+    c4.top, c4.bottom, applyGF, 0, fci4);
+
+  const results=[r1,r2,r3,r4];
+  const names=['Demoulding','Storage','Transportation','Erection'];
+  const fciList=[fci1,fci2,fci3,fci4];
+
+  let summary = `<table class="summary-table">
+    <tr><th>#</th><th>Check</th><th>fci used (N/mm&sup2;)</th><th>Governing design moment (kNm/m)</th><th>Utilisation</th><th>Status</th></tr>`;
+  results.forEach((r,i)=>{
+    summary += `<tr><td>${i+1}</td><td>${names[i]}</td><td class="num">${fmt(fciList[i],1)}</td><td class="num">${fmt(r.govMoment,2)}</td><td class="num">${fmt(r.govRatio*100,0)}%</td>
+    <td><span class="status-pill ${r.status.cls}">${r.status.txt}</span></td></tr>`;
+  });
+  summary += `</table>`;
+  summary += `<div style="font-size:11.5px;color:var(--muted);margin-bottom:18px;">Self-weight UDL used for all checks (per 1&nbsp;m width strip): w = &gamma;c &middot; t = ${fmt(gamma,1)} &times; ${fmt(t/1000,3)} = <b>${fmt(w,2)} kN/m</b>. Full segment reference self-weight (B&times;L&times;t): ${fmt(gamma*B*L*(t/1000),2)} kN.</div>`;
+
+  document.getElementById('summary').innerHTML = summary;
+  document.getElementById('checks').innerHTML = results.map(r=>r.html).join('');
+}
+
+document.getElementById('calcBtn').addEventListener('click', function(){ updateAutoStrengths(); calculate(); });
+window.addEventListener('load', function(){ updateAutoStrengths(); calculate(); });
+</script>
+</body>
+</html>
